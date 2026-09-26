@@ -1,0 +1,40 @@
+[
+    {
+        "algorithm": "greedy",
+        "status": "SUCCESS",
+        "runtime_seconds": 0.069495,
+        "assignment_rate": 100.0,
+        "slot_utilization": 62.5,
+        "total_loaded_weight": 968179.0,
+        "average_container_weight": 19363.58,
+        "total_teu": 71.0,
+        "constraint_violations": 0.0,
+        "rehandling": 8.0,
+        "weight_imbalance_std": 79137.74520726374,
+        "longitudinal_balance_error": 0.9700406639681298,
+        "destination_mixing": 16.0,
+        "priority_penalty": 46.0,
+        "unassigned": 0.0,
+        "objective_score": 81457.78587123187,
+        "solution_file": "experiments\\results\\a8706e2a-4183-44ab-b21f-f4b4eaec3dfa_greedy_solution.csv"
+    },
+    {
+        "algorithm": "cp_sat",
+        "status": "SUCCESS",
+        "runtime_seconds": 0.830625,
+        "assignment_rate": 100.0,
+        "slot_utilization": 62.5,
+        "total_loaded_weight": 968179.0,
+        "average_container_weight": 19363.58,
+        "total_teu": 71.0,
+        "constraint_violations": 0.0,
+        "rehandling": 6.0,
+        "weight_imbalance_std": 61055.61062657858,
+        "longitudinal_balance_error": 0.054012222946377086,
+        "destination_mixing": 14.0,
+        "priority_penalty": 46.0,
+        "unassigned": 0.0,
+        "objective_score": 62219.62284952495,
+        "solution_file": "experiments\\results\\a8706e2a-4183-44ab-b21f-f4b4eaec3dfa_cp_sat_solution.csv"
+    }
+]

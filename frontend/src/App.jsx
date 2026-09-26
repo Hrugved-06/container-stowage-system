@@ -1,0 +1,1774 @@
+import { useEffect, useMemo, useState } from "react";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  Line,
+} from "recharts";
+
+import "./App.css";
+
+
+const API = "http://127.0.0.1:8000";
+
+
+const ALGORITHMS = [
+  ["greedy", "Greedy"],
+  ["priority_greedy", "Priority Greedy"],
+  ["best_fit", "Best Fit"],
+  ["randomized_greedy", "Randomized Greedy"],
+  ["simulated_annealing", "Simulated Annealing"],
+  ["genetic", "Genetic Algorithm"],
+  ["cp_sat", "CP-SAT"],
+];
+
+
+const CONTAINER_FIELDS = [
+  "container_id",
+  "size",
+  "weight",
+  "destination",
+  "destination_order",
+  "priority",
+  "hazardous",
+  "refrigerated",
+];
+
+
+const SLOT_FIELDS = [
+  "slot_id",
+  "bay",
+  "row",
+  "tier",
+  "size",
+  "max_weight",
+  "reefer_capable",
+  "hazardous_allowed",
+];
+
+
+function getErrorMessage(detail) {
+
+  if (!detail) {
+    return "An unexpected error occurred.";
+  }
+
+  if (typeof detail === "string") {
+    return detail;
+  }
+
+  if (detail.message) {
+    return detail.message;
+  }
+
+  if (detail.errors) {
+    return detail.errors.join("\n");
+  }
+
+  if (detail.missing_container_columns) {
+    return (
+      "Missing container columns:\n" +
+      detail.missing_container_columns.join(", ")
+    );
+  }
+
+  if (detail.missing_slot_columns) {
+    return (
+      "Missing slot columns:\n" +
+      detail.missing_slot_columns.join(", ")
+    );
+  }
+
+  return JSON.stringify(detail, null, 2);
+}
+
+
+function formatAlgorithmName(name) {
+
+  const found = ALGORITHMS.find(
+    item => item[0] === name
+  );
+
+  return found ? found[1] : name;
+}
+
+
+function App() {
+
+  const [datasets, setDatasets] = useState([]);
+
+  const [dataset, setDataset] = useState("demo");
+
+  const [selectedAlgorithms, setSelectedAlgorithms] =
+    useState(
+      ALGORITHMS.map(item => item[0])
+    );
+
+  const [containersFile, setContainersFile] =
+    useState(null);
+
+  const [slotsFile, setSlotsFile] =
+    useState(null);
+
+  const [uploaded, setUploaded] =
+    useState(false);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [results, setResults] =
+    useState(null);
+
+  const [error, setError] =
+    useState("");
+
+  const [activeAlgorithm, setActiveAlgorithm] =
+    useState(null);
+
+  const [backendOnline, setBackendOnline] =
+    useState(false);
+
+
+  // -------------------------------------------------------
+  // LOAD DATASETS
+  // -------------------------------------------------------
+
+  const loadDatasets = async () => {
+
+    try {
+
+      const response = await fetch(
+        `${API}/api/datasets`
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          getErrorMessage(data.detail)
+        );
+      }
+
+      setDatasets(data);
+
+      setBackendOnline(true);
+
+      const custom = data.find(
+        item => item.id === "custom"
+      );
+
+      if (custom?.available) {
+        setUploaded(true);
+      }
+
+    } catch (err) {
+
+      setBackendOnline(false);
+
+      setError(
+        "Could not connect to the backend. Start FastAPI on port 8000."
+      );
+
+    }
+  };
+
+
+  useEffect(() => {
+    loadDatasets();
+  }, []);
+
+
+  // -------------------------------------------------------
+  // SELECTED DATASET
+  // -------------------------------------------------------
+
+  const selectedDataset =
+    datasets.find(
+      item => item.id === dataset
+    );
+
+
+  // -------------------------------------------------------
+  // ALGORITHM CONTROLS
+  // -------------------------------------------------------
+
+  const toggleAlgorithm = (name) => {
+
+    setSelectedAlgorithms(current => {
+
+      if (current.includes(name)) {
+
+        return current.filter(
+          item => item !== name
+        );
+
+      }
+
+      return [
+        ...current,
+        name
+      ];
+
+    });
+
+  };
+
+
+  const selectAll = () => {
+
+    setSelectedAlgorithms(
+      ALGORITHMS.map(item => item[0])
+    );
+
+  };
+
+
+  const clearAlgorithms = () => {
+
+    setSelectedAlgorithms([]);
+
+  };
+
+
+  // -------------------------------------------------------
+  // DATASET SELECTION
+  // -------------------------------------------------------
+
+  const handleDatasetChange = (event) => {
+
+    const value = event.target.value;
+
+    setDataset(value);
+
+    setResults(null);
+    setActiveAlgorithm(null);
+    setError("");
+
+  };
+
+
+  // -------------------------------------------------------
+  // FILE SELECTION
+  // -------------------------------------------------------
+
+  const handleContainersFile = (event) => {
+
+    const file =
+      event.target.files?.[0] || null;
+
+    setContainersFile(file);
+
+    setUploaded(false);
+    setError("");
+    setResults(null);
+
+  };
+
+
+  const handleSlotsFile = (event) => {
+
+    const file =
+      event.target.files?.[0] || null;
+
+    setSlotsFile(file);
+
+    setUploaded(false);
+    setError("");
+    setResults(null);
+
+  };
+
+
+  // -------------------------------------------------------
+  // CUSTOM DATASET UPLOAD
+  // -------------------------------------------------------
+
+  const uploadCustomDataset = async () => {
+
+    // Clear old validation state first
+    setUploaded(false);
+    setError("");
+
+    if (!containersFile || !slotsFile) {
+      setError(
+        "Please select both Container CSV and Slot CSV files."
+      );
+      return;
+    }
+
+    const formData = new FormData();
+
+    formData.append(
+      "containers_file",
+      containersFile
+    );
+
+    formData.append(
+      "slots_file",
+      slotsFile
+    );
+
+    try {
+
+      const response = await fetch(
+        `${API}/api/upload`,
+        {
+          method: "POST",
+          body: formData
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+
+        let message =
+          "The uploaded dataset is invalid.";
+
+        const detail = data.detail;
+
+        if (typeof detail === "string") {
+
+          message = detail;
+
+        } else if (detail && typeof detail === "object") {
+
+          if (detail.message) {
+            message = detail.message;
+          }
+
+          if (
+            detail.errors &&
+            Array.isArray(detail.errors)
+          ) {
+            message += "\n" +
+              detail.errors
+                .map(error => `• ${error}`)
+                .join("\n");
+          }
+
+          if (
+            detail.missing_container_columns &&
+            detail.missing_container_columns.length
+          ) {
+            message +=
+              "\nMissing container columns: " +
+              detail.missing_container_columns.join(", ");
+          }
+
+          if (
+            detail.missing_slot_columns &&
+            detail.missing_slot_columns.length
+          ) {
+            message +=
+              "\nMissing slot columns: " +
+              detail.missing_slot_columns.join(", ");
+          }
+
+        }
+
+        throw new Error(message);
+      }
+
+      // Only mark as validated after successful validation
+      setUploaded(true);
+      setDataset("custom");
+
+    } catch (err) {
+
+      setUploaded(false);
+
+      setError(
+        err.message ||
+        "The uploaded dataset could not be validated."
+      );
+
+    }
+
+  };
+
+
+  // -------------------------------------------------------
+  // RUN OPTIMIZATION
+  // -------------------------------------------------------
+
+  const runOptimization = async () => {
+
+    if (selectedAlgorithms.length === 0) {
+
+      setError(
+        "Select at least one algorithm."
+      );
+
+      return;
+
+    }
+
+
+    if (
+      dataset === "custom" &&
+      !uploaded
+    ) {
+
+      setError(
+        "Please upload and validate both custom CSV files before running optimization."
+      );
+
+      return;
+
+    }
+
+
+    setLoading(true);
+    setError("");
+    setResults(null);
+    setActiveAlgorithm(null);
+
+
+    try {
+
+      const response = await fetch(
+        `${API}/api/optimize`,
+        {
+          method: "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+
+            dataset,
+
+            algorithms:
+              selectedAlgorithms,
+
+          }),
+
+        }
+      );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          getErrorMessage(data.detail)
+        );
+
+      }
+
+
+      setResults(data);
+
+
+      const firstSuccessful =
+        data.comparison?.find(
+          item =>
+            item.status === "SUCCESS"
+        );
+
+
+      if (firstSuccessful) {
+
+        setActiveAlgorithm(
+          firstSuccessful.algorithm
+        );
+
+      }
+
+
+    } catch (err) {
+
+      setError(
+        err.message
+      );
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+
+  // -------------------------------------------------------
+  // ACTIVE SOLUTION
+  // -------------------------------------------------------
+
+  const activeSolution = useMemo(() => {
+
+    if (
+      !results ||
+      !activeAlgorithm
+    ) {
+
+      return [];
+
+    }
+
+
+    return (
+      results.solutions?.[
+        activeAlgorithm
+      ] || []
+    );
+
+  }, [
+    results,
+    activeAlgorithm,
+  ]);
+
+
+  // -------------------------------------------------------
+  // SUCCESSFUL RESULTS
+  // -------------------------------------------------------
+
+  const successfulResults =
+    results?.comparison?.filter(
+      item =>
+        item.status === "SUCCESS"
+    ) || [];
+
+
+  // -------------------------------------------------------
+  // DYNAMIC RESEARCH SUMMARY
+  // -------------------------------------------------------
+
+  const researchSummary = useMemo(() => {
+
+    if (!results) {
+      return null;
+    }
+
+
+    const totalAlgorithms =
+      results.comparison?.length || 0;
+
+
+    const successful =
+      successfulResults.length;
+
+
+    const failed =
+      totalAlgorithms - successful;
+
+
+    const allFullAssignment =
+      successful > 0 &&
+      successfulResults.every(
+        item =>
+          Number(item.assignment_rate) === 100
+      );
+
+
+    const allConstraintFree =
+      successful > 0 &&
+      successfulResults.every(
+        item =>
+          Number(item.constraint_violations) === 0
+      );
+
+
+    const assignmentRates =
+      successfulResults.map(
+        item =>
+          Number(item.assignment_rate)
+      );
+
+
+    const utilizationValues =
+      successfulResults.map(
+        item =>
+          Number(item.slot_utilization)
+      );
+
+
+    const objectiveValues =
+      successfulResults.map(
+        item =>
+          Number(item.objective_score)
+      );
+
+
+    const runtimeValues =
+      successfulResults.map(
+        item =>
+          Number(item.runtime_seconds)
+      );
+
+
+    const averageAssignment =
+      assignmentRates.length
+        ? (
+            assignmentRates.reduce(
+              (a, b) => a + b,
+              0
+            ) / assignmentRates.length
+          ).toFixed(1)
+        : "0";
+
+
+    const averageUtilization =
+      utilizationValues.length
+        ? (
+            utilizationValues.reduce(
+              (a, b) => a + b,
+              0
+            ) / utilizationValues.length
+          ).toFixed(1)
+        : "0";
+
+
+    const minObjective =
+      objectiveValues.length
+        ? Math.min(...objectiveValues)
+        : null;
+
+
+    const maxObjective =
+      objectiveValues.length
+        ? Math.max(...objectiveValues)
+        : null;
+
+
+    const minRuntime =
+      runtimeValues.length
+        ? Math.min(...runtimeValues)
+        : null;
+
+
+    const maxRuntime =
+      runtimeValues.length
+        ? Math.max(...runtimeValues)
+        : null;
+
+
+    let summary =
+      `The ${formatAlgorithmName(results.dataset)} dataset contained ` +
+      `${results.container_count} containers and ` +
+      `${results.slot_count} available slots. `;
+
+
+    summary +=
+      `${successful} of ${totalAlgorithms} selected algorithms ` +
+      `completed successfully`;
+
+
+    if (failed > 0) {
+
+      summary +=
+        `, while ${failed} algorithm` +
+        `${failed === 1 ? "" : "s"} failed during execution`;
+
+    }
+
+
+    summary += ". ";
+
+
+    if (allFullAssignment) {
+
+      summary +=
+        "All completed algorithms achieved a 100% assignment rate. ";
+
+    } else {
+
+      summary +=
+        `The average assignment rate across completed algorithms was ` +
+        `${averageAssignment}%. `;
+
+    }
+
+
+    if (allConstraintFree) {
+
+      summary +=
+        "No constraint violations were recorded in the completed solutions. ";
+
+    } else {
+
+      summary +=
+        "Constraint-violation counts differed across the completed solutions. ";
+
+    }
+
+
+    summary +=
+      `Average slot utilization was ${averageUtilization}%. `;
+
+
+    if (
+      minObjective !== null &&
+      maxObjective !== null
+    ) {
+
+      summary +=
+        `Objective scores ranged from ` +
+        `${minObjective.toFixed(2)} to ` +
+        `${maxObjective.toFixed(2)}. `;
+
+    }
+
+
+    if (
+      minRuntime !== null &&
+      maxRuntime !== null
+    ) {
+
+      summary +=
+        `Observed algorithm runtimes ranged from ` +
+        `${minRuntime.toFixed(3)} to ` +
+        `${maxRuntime.toFixed(3)} seconds. `;
+
+    }
+
+
+    summary +=
+      "These results demonstrate trade-offs between computational runtime, " +
+      "stowage quality and resource utilization under the same constraint " +
+      "and evaluation framework. The comparison is intended to support " +
+      "multi-objective analysis rather than identify a universally superior algorithm.";
+
+
+    return {
+      text: summary,
+      successful,
+      failed,
+      averageAssignment,
+      averageUtilization,
+    };
+
+
+  }, [
+    results,
+    successfulResults,
+  ]);
+
+
+  return (
+
+    <div className="app">
+
+
+      {/* ================================================= */}
+      {/* HEADER */}
+      {/* ================================================= */}
+
+      <header className="topbar">
+
+        <div className="hero-content">
+
+          <div className="eyebrow">
+            AI-ASSISTED
+          </div>
+
+          <h1>
+            CONTAINER STOWAGE PLANNER
+          </h1>
+
+          <p>
+            Multi-Objective Optimization Framework
+            for Constraint-Aware Container Stowage Planning
+          </p>
+
+        </div>
+
+
+        <div
+          className={
+            backendOnline
+              ? "status-pill online"
+              : "status-pill offline"
+          }
+        >
+
+          <span className="status-dot"></span>
+
+          {backendOnline
+            ? "System Ready"
+            : "Backend Offline"}
+
+        </div>
+
+      </header>
+
+
+      <main className="container">
+
+
+        {/* ================================================= */}
+        {/* ERROR */}
+        {/* ================================================= */}
+
+        {error && (
+          <div className="error-box">
+            <div className="error-title">Dataset Validation Error</div>
+            <div className="error-message">{error}</div>
+          </div>
+        )}
+
+
+        {/* ================================================= */}
+        {/* CONFIGURATION */}
+        {/* ================================================= */}
+
+        <section className="grid two">
+
+
+          {/* ------------------------------------------------ */}
+          {/* DATASET CARD */}
+          {/* ------------------------------------------------ */}
+
+          <div className="card">
+
+            <div className="section-title">
+
+              <span>01</span>
+
+              Select Dataset
+
+            </div>
+
+
+            <p className="section-description">
+              Choose a prepared benchmark dataset or
+              upload your own container and slot data.
+            </p>
+
+
+            <label>
+              Benchmark Dataset
+            </label>
+
+
+            <select
+              value={dataset}
+              onChange={handleDatasetChange}
+            >
+
+              {datasets
+                .filter(
+                  item =>
+                    item.id !== "custom"
+                )
+                .map(item => (
+
+                  <option
+                    key={item.id}
+                    value={item.id}
+                    disabled={!item.available}
+                  >
+
+                    {item.name}
+                    {" — "}
+                    {item.available
+                      ? `${item.containers} containers / ${item.slots} slots`
+                      : "Not available"}
+
+                  </option>
+
+                ))}
+
+
+              <option value="custom">
+                Custom — Upload your own data
+              </option>
+
+            </select>
+
+
+            {selectedDataset &&
+              dataset !== "custom" && (
+
+              <div className="dataset-info">
+
+                <div>
+
+                  <strong>
+                    {selectedDataset.containers}
+                  </strong>
+
+                  <span>
+                    Containers
+                  </span>
+
+                </div>
+
+
+                <div>
+
+                  <strong>
+                    {selectedDataset.slots}
+                  </strong>
+
+                  <span>
+                    Slots
+                  </span>
+
+                </div>
+
+              </div>
+
+            )}
+
+
+            {/* ------------------------------------------------ */}
+            {/* CUSTOM UPLOAD */}
+            {/* ------------------------------------------------ */}
+
+            <div className="custom-upload">
+
+              <div className="upload-heading">
+
+                <div>
+
+                  <h3>
+                    Custom Dataset
+                  </h3>
+
+                  <p>
+                    Container and slot information are
+                    provided as two separate CSV files.
+                  </p>
+
+                </div>
+
+              </div>
+
+
+              <div className="upload-grid">
+
+
+                {/* Container CSV */}
+
+                <div className="upload-card">
+
+                  <div className="upload-icon">
+                    📦
+                  </div>
+
+                  <h4>
+                    Container Data
+                  </h4>
+
+                  <p>
+                    What needs to be loaded?
+                  </p>
+
+
+                  <label
+                    className="file-button"
+                  >
+
+                    Choose Container CSV
+
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={
+                        handleContainersFile
+                      }
+                    />
+
+                  </label>
+
+
+                  <div className="selected-file">
+
+                    {containersFile
+                      ? containersFile.name
+                      : "No file selected"}
+
+                  </div>
+
+
+                  <div className="required-fields">
+
+                    <strong>
+                      Required columns
+                    </strong>
+
+                    <span>
+                      {CONTAINER_FIELDS.join(" • ")}
+                    </span>
+
+                  </div>
+
+                </div>
+
+
+                {/* Slot CSV */}
+
+                <div className="upload-card">
+
+                  <div className="upload-icon">
+                    🧩
+                  </div>
+
+                  <h4>
+                    Slot Data
+                  </h4>
+
+                  <p>
+                    Where can containers go?
+                  </p>
+
+
+                  <label
+                    className="file-button"
+                  >
+
+                    Choose Slot CSV
+
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={
+                        handleSlotsFile
+                      }
+                    />
+
+                  </label>
+
+
+                  <div className="selected-file">
+
+                    {slotsFile
+                      ? slotsFile.name
+                      : "No file selected"}
+
+                  </div>
+
+
+                  <div className="required-fields">
+
+                    <strong>
+                      Required columns
+                    </strong>
+
+                    <span>
+                      {SLOT_FIELDS.join(" • ")}
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+
+              <button
+                className="secondary"
+                onClick={
+                  uploadCustomDataset
+                }
+                disabled={loading}
+              >
+
+                {loading
+                  ? "Validating..."
+                  : "Validate & Upload"}
+
+              </button>
+
+
+              {uploaded &&
+                dataset === "custom" && (
+
+                <div className="success">
+
+                  ✓ Custom dataset validated successfully
+
+                </div>
+
+              )}
+
+            </div>
+
+          </div>
+
+
+          {/* ------------------------------------------------ */}
+          {/* ALGORITHM CARD */}
+          {/* ------------------------------------------------ */}
+
+          <div className="card">
+
+            <div className="section-title">
+
+              <span>02</span>
+
+              Select Algorithms
+
+            </div>
+
+
+            <p className="section-description">
+              Select one or more optimization methods to
+              compare them under the same dataset and
+              constraint framework.
+            </p>
+
+
+            <div className="algorithm-actions">
+
+              <button
+                className="text-button"
+                onClick={selectAll}
+              >
+                Select All
+              </button>
+
+
+              <button
+                className="text-button clear-button"
+                onClick={clearAlgorithms}
+              >
+                Clear
+              </button>
+
+            </div>
+
+
+            <div className="algorithm-list">
+
+              {ALGORITHMS.map(
+                ([id, label]) => (
+
+                  <label
+                    className="algorithm-item"
+                    key={id}
+                  >
+
+                    <input
+                      type="checkbox"
+                      checked={
+                        selectedAlgorithms.includes(
+                          id
+                        )
+                      }
+                      onChange={() =>
+                        toggleAlgorithm(id)
+                      }
+                    />
+
+                    <span>
+                      {label}
+                    </span>
+
+                  </label>
+
+                )
+              )}
+
+            </div>
+
+
+            <div className="algorithm-note">
+
+              <strong>
+                Research evaluation
+              </strong>
+
+              <p>
+                All selected algorithms are evaluated
+                using the same placement constraints,
+                feasibility checks and multi-objective
+                scoring framework.
+              </p>
+
+            </div>
+
+
+            <button
+              className="run-button"
+              onClick={runOptimization}
+              disabled={loading}
+            >
+
+              {loading
+                ? "Running Optimization..."
+                : "RUN OPTIMIZATION"}
+
+            </button>
+
+          </div>
+
+        </section>
+
+
+        {/* ================================================= */}
+        {/* LOADING */}
+        {/* ================================================= */}
+
+        {loading && (
+
+          <section className="card loading-card">
+
+            <div className="loader"></div>
+
+            <h2>
+              Optimization in Progress
+            </h2>
+
+            <p>
+              Heuristic methods normally complete quickly,
+              while metaheuristic methods may require
+              significantly more computation.
+            </p>
+
+          </section>
+
+        )}
+
+
+        {/* ================================================= */}
+        {/* RESULTS */}
+        {/* ================================================= */}
+
+        {results && (
+
+          <>
+
+            {/* ------------------------------------------------ */}
+            {/* SUMMARY METRICS */}
+            {/* ------------------------------------------------ */}
+
+            <section className="summary-grid">
+
+              <div className="metric-card">
+
+                <span>
+                  Dataset
+                </span>
+
+                <strong>
+                  {formatAlgorithmName(
+                    results.dataset
+                  )}
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card">
+
+                <span>
+                  Containers
+                </span>
+
+                <strong>
+                  {results.container_count}
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card">
+
+                <span>
+                  Slots
+                </span>
+
+                <strong>
+                  {results.slot_count}
+                </strong>
+
+              </div>
+
+
+              <div className="metric-card">
+
+                <span>
+                  Total Runtime
+                </span>
+
+                <strong>
+                  {Number(
+                    results.total_runtime_seconds
+                  ).toFixed(2)}s
+                </strong>
+
+              </div>
+
+            </section>
+
+
+            {/* ------------------------------------------------ */}
+            {/* ALGORITHM COMPARISON */}
+            {/* ------------------------------------------------ */}
+
+            <section className="card">
+
+              <div className="section-title">
+
+                <span>03</span>
+
+                Algorithm Comparison
+
+              </div>
+
+
+              <div className="table-wrapper">
+
+                <table>
+
+                  <thead>
+
+                    <tr>
+
+                      <th>Algorithm</th>
+                      <th>Runtime</th>
+                      <th>Assignment</th>
+                      <th>Utilization</th>
+                      <th>Violations</th>
+                      <th>Imbalance</th>
+                      <th>Objective</th>
+
+                    </tr>
+
+                  </thead>
+
+
+                  <tbody>
+
+                    {results.comparison.map(
+                      row => (
+
+                        <tr
+                          key={row.algorithm}
+                          onClick={() =>
+                            row.status === "SUCCESS" &&
+                            setActiveAlgorithm(
+                              row.algorithm
+                            )
+                          }
+                          className={
+                            activeAlgorithm ===
+                            row.algorithm
+                              ? "active-row"
+                              : ""
+                          }
+                        >
+
+                          <td>
+                            <strong>
+                              {formatAlgorithmName(
+                                row.algorithm
+                              )}
+                            </strong>
+                          </td>
+
+                          <td>
+                            {Number(
+                              row.runtime_seconds
+                            ).toFixed(3)}s
+                          </td>
+
+                          <td>
+                            {row.status === "SUCCESS"
+                              ? `${row.assignment_rate}%`
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {row.status === "SUCCESS"
+                              ? `${row.slot_utilization}%`
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {row.status === "SUCCESS"
+                              ? row.constraint_violations
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {row.status === "SUCCESS"
+                              ? Number(
+                                  row.weight_imbalance_std
+                                ).toFixed(2)
+                              : "—"}
+                          </td>
+
+                          <td>
+                            {row.status === "SUCCESS"
+                              ? Number(
+                                  row.objective_score
+                                ).toFixed(2)
+                              : "Failed"}
+                          </td>
+
+                        </tr>
+
+                      )
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </section>
+
+
+            {/* ------------------------------------------------ */}
+            {/* CHARTS */}
+            {/* ------------------------------------------------ */}
+
+            {successfulResults.length > 0 && (
+
+              <section className="grid two">
+
+
+                <div className="card chart-card">
+
+                  <div className="section-title">
+
+                    <span>04</span>
+
+                    Runtime Comparison
+
+                  </div>
+
+
+                  <ResponsiveContainer
+                    width="100%"
+                    height={320}
+                  >
+
+                    <BarChart
+                      data={
+                        successfulResults
+                      }
+                    >
+
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                      />
+
+                      <XAxis
+                        dataKey="algorithm"
+                        angle={-20}
+                        textAnchor="end"
+                        height={80}
+                      />
+
+                      <YAxis />
+
+                      <Tooltip />
+
+                      <Bar
+                        dataKey="runtime_seconds"
+                        name="Runtime (seconds)"
+                      />
+
+                    </BarChart>
+
+                  </ResponsiveContainer>
+
+                </div>
+
+
+                <div className="card chart-card">
+
+                  <div className="section-title">
+
+                    <span>05</span>
+
+                    Objective Comparison
+
+                  </div>
+
+
+                  <ResponsiveContainer
+                    width="100%"
+                    height={320}
+                  >
+
+                    <LineChart
+                      data={
+                        successfulResults
+                      }
+                    >
+
+                      <CartesianGrid
+                        strokeDasharray="3 3"
+                      />
+
+                      <XAxis
+                        dataKey="algorithm"
+                        angle={-20}
+                        textAnchor="end"
+                        height={80}
+                      />
+
+                      <YAxis />
+
+                      <Tooltip />
+
+                      <Line
+                        type="monotone"
+                        dataKey="objective_score"
+                        name="Objective Score"
+                      />
+
+                    </LineChart>
+
+                  </ResponsiveContainer>
+
+                </div>
+
+              </section>
+
+            )}
+
+
+            {/* ------------------------------------------------ */}
+            {/* STOWAGE PLAN */}
+            {/* ------------------------------------------------ */}
+
+            <section className="card">
+
+              <div className="section-title">
+
+                <span>06</span>
+
+                Stowage Assignment
+
+              </div>
+
+
+              <div className="solution-selector">
+
+                {successfulResults.map(
+                  row => (
+
+                    <button
+                      key={
+                        row.algorithm
+                      }
+                      className={
+                        activeAlgorithm ===
+                        row.algorithm
+                          ? "selected"
+                          : ""
+                      }
+                      onClick={() =>
+                        setActiveAlgorithm(
+                          row.algorithm
+                        )
+                      }
+                    >
+
+                      {formatAlgorithmName(
+                        row.algorithm
+                      )}
+
+                    </button>
+
+                  )
+                )}
+
+              </div>
+
+
+              <div className="table-wrapper">
+
+                <table>
+
+                  <thead>
+
+                    <tr>
+
+                      <th>Container</th>
+                      <th>Slot</th>
+                      <th>Bay</th>
+                      <th>Row</th>
+                      <th>Tier</th>
+                      <th>Weight</th>
+                      <th>Destination</th>
+                      <th>Priority</th>
+
+                    </tr>
+
+                  </thead>
+
+
+                  <tbody>
+
+                    {activeSolution.map(
+                      (item, index) => (
+
+                        <tr
+                          key={
+                            `${item.container_id}-${index}`
+                          }
+                        >
+
+                          <td>
+                            {item.container_id}
+                          </td>
+
+                          <td>
+                            {item.slot_id}
+                          </td>
+
+                          <td>
+                            {item.bay}
+                          </td>
+
+                          <td>
+                            {item.row}
+                          </td>
+
+                          <td>
+                            {item.tier}
+                          </td>
+
+                          <td>
+                            {item.container_weight}
+                          </td>
+
+                          <td>
+                            {item.destination}
+                          </td>
+
+                          <td>
+                            {item.priority}
+                          </td>
+
+                        </tr>
+
+                      )
+                    )}
+
+                  </tbody>
+
+                </table>
+
+              </div>
+
+            </section>
+
+
+            {/* ------------------------------------------------ */}
+            {/* RESEARCH SUMMARY */}
+            {/* ------------------------------------------------ */}
+
+            {researchSummary && (
+
+              <section className="card research-card">
+
+                <div className="section-title">
+
+                  <span>07</span>
+
+                  Research Summary
+
+                </div>
+
+
+                <p className="research-summary-text">
+                  {researchSummary.text}
+                </p>
+
+
+                <div className="research-points">
+
+                  <div>
+
+                    <strong>
+                      {researchSummary.successful}
+                    </strong>
+
+                    <span>
+                      Algorithms completed
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <strong>
+                      {researchSummary.averageAssignment}%
+                    </strong>
+
+                    <span>
+                      Average assignment
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <strong>
+                      {researchSummary.averageUtilization}%
+                    </strong>
+
+                    <span>
+                      Average slot utilization
+                    </span>
+
+                  </div>
+
+
+                  <div>
+
+                    <strong>
+                      {researchSummary.failed}
+                    </strong>
+
+                    <span>
+                      Algorithms failed
+                    </span>
+
+                  </div>
+
+                </div>
+
+              </section>
+
+            )}
+
+          </>
+
+        )}
+
+      </main>
+
+
+      {/* ================================================= */}
+      {/* FOOTER */}
+      {/* ================================================= */}
+
+      <footer>
+
+        AI-Assisted Multi-Objective Optimization
+        Framework for Container Stowage Planning
+
+      </footer>
+
+    </div>
+
+  );
+
+}
+
+
+export default App;
