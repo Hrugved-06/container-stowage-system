@@ -15,7 +15,7 @@ import {
 import "./App.css";
 
 
-const API = "http://127.0.0.1:8000";
+const API = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
 
 
 const ALGORITHMS = [
@@ -110,11 +110,9 @@ function App() {
       ALGORITHMS.map(item => item[0])
     );
 
-  const [containersFile, setContainersFile] =
-    useState(null);
+  const [customFiles, setCustomFiles] = useState([]);
 
-  const [slotsFile, setSlotsFile] =
-    useState(null);
+  const [uploadSummary, setUploadSummary] = useState(null);
 
   const [uploaded, setUploaded] =
     useState(false);
@@ -127,6 +125,9 @@ function App() {
 
   const [error, setError] =
     useState("");
+
+  const [errorTitle, setErrorTitle] =
+    useState("Notice");
 
   const [activeAlgorithm, setActiveAlgorithm] =
     useState(null);
@@ -171,6 +172,7 @@ function App() {
 
       setBackendOnline(false);
 
+      setErrorTitle("Connection Error");
       setError(
         "Could not connect to the backend. Start FastAPI on port 8000."
       );
@@ -249,39 +251,23 @@ function App() {
     setResults(null);
     setActiveAlgorithm(null);
     setError("");
+    setErrorTitle("Notice");
 
   };
 
 
   // -------------------------------------------------------
-  // FILE SELECTION
+  // SMART MULTI-FILE SELECTION
   // -------------------------------------------------------
 
-  const handleContainersFile = (event) => {
-
-    const file =
-      event.target.files?.[0] || null;
-
-    setContainersFile(file);
-
+  const handleCustomFiles = (event) => {
+    const files = Array.from(event.target.files || []);
+    setCustomFiles(files);
     setUploaded(false);
+    setUploadSummary(null);
     setError("");
+    setErrorTitle("Notice");
     setResults(null);
-
-  };
-
-
-  const handleSlotsFile = (event) => {
-
-    const file =
-      event.target.files?.[0] || null;
-
-    setSlotsFile(file);
-
-    setUploaded(false);
-    setError("");
-    setResults(null);
-
   };
 
 
@@ -290,107 +276,35 @@ function App() {
   // -------------------------------------------------------
 
   const uploadCustomDataset = async () => {
-
-    // Clear old validation state first
     setUploaded(false);
+    setUploadSummary(null);
     setError("");
+    setErrorTitle("Upload Error");
 
-    if (!containersFile || !slotsFile) {
-      setError(
-        "Please select both Container CSV and Slot CSV files."
-      );
+    if (customFiles.length < 2) {
+      setError("Select at least two CSV files containing cargo/container data and vessel-slot data.");
       return;
     }
 
     const formData = new FormData();
-
-    formData.append(
-      "containers_file",
-      containersFile
-    );
-
-    formData.append(
-      "slots_file",
-      slotsFile
-    );
+    customFiles.forEach(file => formData.append("files", file));
+    setLoading(true);
 
     try {
-
-      const response = await fetch(
-        `${API}/api/upload`,
-        {
-          method: "POST",
-          body: formData
-        }
-      );
-
+      const response = await fetch(`${API}/api/upload`, { method: "POST", body: formData });
       const data = await response.json();
-
-      if (!response.ok) {
-
-        let message =
-          "The uploaded dataset is invalid.";
-
-        const detail = data.detail;
-
-        if (typeof detail === "string") {
-
-          message = detail;
-
-        } else if (detail && typeof detail === "object") {
-
-          if (detail.message) {
-            message = detail.message;
-          }
-
-          if (
-            detail.errors &&
-            Array.isArray(detail.errors)
-          ) {
-            message += "\n" +
-              detail.errors
-                .map(error => `• ${error}`)
-                .join("\n");
-          }
-
-          if (
-            detail.missing_container_columns &&
-            detail.missing_container_columns.length
-          ) {
-            message +=
-              "\nMissing container columns: " +
-              detail.missing_container_columns.join(", ");
-          }
-
-          if (
-            detail.missing_slot_columns &&
-            detail.missing_slot_columns.length
-          ) {
-            message +=
-              "\nMissing slot columns: " +
-              detail.missing_slot_columns.join(", ");
-          }
-
-        }
-
-        throw new Error(message);
-      }
-
-      // Only mark as validated after successful validation
+      if (!response.ok) throw new Error(getErrorMessage(data.detail));
       setUploaded(true);
+      setUploadSummary(data);
       setDataset("custom");
-
+      await loadDatasets();
     } catch (err) {
-
       setUploaded(false);
-
-      setError(
-        err.message ||
-        "The uploaded dataset could not be validated."
-      );
-
+      setErrorTitle("Upload Error");
+      setError(err.message || "The selected files could not be uploaded.");
+    } finally {
+      setLoading(false);
     }
-
   };
 
 
@@ -399,6 +313,8 @@ function App() {
   // -------------------------------------------------------
 
   const runOptimization = async () => {
+
+    setErrorTitle("Optimization Error");
 
     if (selectedAlgorithms.length === 0) {
 
@@ -417,7 +333,7 @@ function App() {
     ) {
 
       setError(
-        "Please upload and validate both custom CSV files before running optimization."
+        "Upload the custom dataset before running optimization."
       );
 
       return;
@@ -490,9 +406,12 @@ function App() {
 
     } catch (err) {
 
-      setError(
-        err.message
-      );
+      const message = err?.message === "Failed to fetch"
+        ? "The optimization request could not reach the backend. Confirm the backend terminal is still running, then try again."
+        : (err?.message || "Optimization could not be completed.");
+
+      setErrorTitle("Optimization Error");
+      setError(message);
 
     } finally {
 
@@ -500,6 +419,13 @@ function App() {
 
     }
 
+  };
+
+
+  const downloadExport = (path) => {
+    if (!path) return;
+    const encoded = path.split("/").map(encodeURIComponent).join("/");
+    window.open(`${API}/api/download/${encoded}`, "_blank", "noopener,noreferrer");
   };
 
 
@@ -814,7 +740,7 @@ function App() {
 
         {error && (
           <div className="error-box">
-            <div className="error-title">Dataset Validation Error</div>
+            <div className="error-title">{errorTitle}</div>
             <div className="error-message">{error}</div>
           </div>
         )}
@@ -919,6 +845,11 @@ function App() {
 
                 </div>
 
+                <div className="dataset-scenario">
+                  <strong>{selectedDataset.description}</strong>
+                  <span>{selectedDataset.route}</span>
+                </div>
+
               </div>
 
             )}
@@ -931,168 +862,47 @@ function App() {
             <div className="custom-upload">
 
               <div className="upload-heading">
-
                 <div>
-
-                  <h3>
-                    Custom Dataset
-                  </h3>
-
-                  <p>
-                    Container and slot information are
-                    provided as two separate CSV files.
-                  </p>
-
+                  <h3>Custom Dataset</h3>
+                  <p>Select the CSV files for this stowage run.</p>
                 </div>
-
               </div>
 
+              <div className="smart-upload-panel compact-upload">
+                <label className="file-button">
+                  Select CSV Files
+                  <input
+                    type="file"
+                    accept=".csv,text/csv"
+                    multiple
+                    onChange={handleCustomFiles}
+                  />
+                </label>
 
-              <div className="upload-grid">
-
-
-                {/* Container CSV */}
-
-                <div className="upload-card">
-
-                  <div className="upload-icon">
-                    📦
-                  </div>
-
-                  <h4>
-                    Container Data
-                  </h4>
-
-                  <p>
-                    What needs to be loaded?
-                  </p>
-
-
-                  <label
-                    className="file-button"
-                  >
-
-                    Choose Container CSV
-
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={
-                        handleContainersFile
-                      }
-                    />
-
-                  </label>
-
-
-                  <div className="selected-file">
-
-                    {containersFile
-                      ? containersFile.name
-                      : "No file selected"}
-
-                  </div>
-
-
-                  <div className="required-fields">
-
-                    <strong>
-                      Required columns
-                    </strong>
-
-                    <span>
-                      {CONTAINER_FIELDS.join(" • ")}
-                    </span>
-
-                  </div>
-
+                <div className="selected-file">
+                  {customFiles.length
+                    ? `${customFiles.length} file(s) selected: ${customFiles.map(f => f.name).join(", ")}`
+                    : "No files selected"}
                 </div>
-
-
-                {/* Slot CSV */}
-
-                <div className="upload-card">
-
-                  <div className="upload-icon">
-                    🧩
-                  </div>
-
-                  <h4>
-                    Slot Data
-                  </h4>
-
-                  <p>
-                    Where can containers go?
-                  </p>
-
-
-                  <label
-                    className="file-button"
-                  >
-
-                    Choose Slot CSV
-
-                    <input
-                      type="file"
-                      accept=".csv"
-                      onChange={
-                        handleSlotsFile
-                      }
-                    />
-
-                  </label>
-
-
-                  <div className="selected-file">
-
-                    {slotsFile
-                      ? slotsFile.name
-                      : "No file selected"}
-
-                  </div>
-
-
-                  <div className="required-fields">
-
-                    <strong>
-                      Required columns
-                    </strong>
-
-                    <span>
-                      {SLOT_FIELDS.join(" • ")}
-                    </span>
-
-                  </div>
-
-                </div>
-
               </div>
-
 
               <button
                 className="secondary"
-                onClick={
-                  uploadCustomDataset
-                }
+                onClick={uploadCustomDataset}
                 disabled={loading}
               >
-
-                {loading
-                  ? "Validating..."
-                  : "Validate & Upload"}
-
+                {loading ? "Uploading..." : "Upload Dataset"}
               </button>
 
-
-              {uploaded &&
-                dataset === "custom" && (
-
-                <div className="success">
-
-                  ✓ Custom dataset validated successfully
-
+              {uploaded && dataset === "custom" && (
+                <div className="success compact-success">
+                  <strong>✓ Dataset ready</strong>
+                  {uploadSummary && (
+                    <span>
+                      {uploadSummary.container_count} containers • {uploadSummary.slot_count} slots • {uploadSummary.files_processed} files
+                    </span>
+                  )}
                 </div>
-
               )}
 
             </div>
@@ -1303,6 +1113,44 @@ function App() {
 
               </div>
 
+            </section>
+
+
+            <section className="card result-action-card">
+              <div className="recommended-summary">
+                <div>
+                  <span className="mini-label">Recommended Plan</span>
+                  <strong>
+                    {results.recommended_algorithm
+                      ? formatAlgorithmName(results.recommended_algorithm)
+                      : "No successful plan"}
+                  </strong>
+                  <small>
+                    {results.container_count} containers competing for {results.slot_count} slots
+                  </small>
+                </div>
+
+                <div className="export-actions">
+                  {[
+                    ["csv", "CSV"],
+                    ["xlsx", "Excel"],
+                    ["docx", "Word"],
+                    ["pdf", "PDF"],
+                    ["json", "JSON"],
+                    ["zip", "All Files"],
+                  ].map(([key, label]) => (
+                    results.export_files?.[key] && (
+                      <button
+                        key={key}
+                        className="export-button"
+                        onClick={() => downloadExport(results.export_files[key])}
+                      >
+                        {label}
+                      </button>
+                    )
+                  ))}
+                </div>
+              </div>
             </section>
 
 

@@ -1,5 +1,0 @@
-algorithm,status,runtime_seconds,assignment_rate,slot_utilization,total_loaded_weight,average_container_weight,total_teu,constraint_violations,rehandling,weight_imbalance_std,longitudinal_balance_error,destination_mixing,priority_penalty,unassigned,objective_score,solution_file
-greedy,SUCCESS,0.08044,100.0,62.5,968179.0,19363.58,71.0,0.0,8.0,79137.74520726374,0.9700406639681298,16.0,46.0,0.0,81457.78587123187,experiments\results\65178ea1-7441-46c7-bba2-795cfcb9515e_greedy_solution.csv
-priority_greedy,SUCCESS,0.084367,100.0,62.5,968179.0,19363.58,71.0,0.0,9.0,67529.65108606408,0.4920603524761433,18.0,46.0,0.0,69511.71143854022,experiments\results\65178ea1-7441-46c7-bba2-795cfcb9515e_priority_greedy_solution.csv
-best_fit,SUCCESS,0.274169,100.0,62.5,968179.0,19363.58,71.0,0.0,8.0,79137.74520726374,0.9700406639681298,16.0,46.0,0.0,81457.78587123187,experiments\results\65178ea1-7441-46c7-bba2-795cfcb9515e_best_fit_solution.csv
-cp_sat,SUCCESS,0.732829,100.0,62.5,968179.0,19363.58,71.0,0.0,10.0,74087.81844293063,1.1137853345595925,17.0,46.0,0.0,76771.60377749022,experiments\results\65178ea1-7441-46c7-bba2-795cfcb9515e_cp_sat_solution.csv

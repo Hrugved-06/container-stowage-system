@@ -1,5 +1,6 @@
 import io
 import json
+import os
 import sys
 import time
 import uuid
@@ -37,6 +38,8 @@ from optimization.evaluation import evaluate_solution
 from optimization.objective import calculate_objective_score
 
 from backend.validator import validate_dataset
+from backend.data_ingestion import ingest_files
+from backend.exporter import create_exports
 
 
 # ---------------------------------------------------------
@@ -72,13 +75,25 @@ app = FastAPI(
 # CORS
 # ---------------------------------------------------------
 
+LOCAL_ORIGINS = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+]
+
+EXTRA_ORIGINS = [
+    origin.strip().rstrip("/")
+    for origin in os.getenv("FRONTEND_ORIGINS", "").split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
+    allow_origins=LOCAL_ORIGINS + EXTRA_ORIGINS,
+    # Vercel production and preview URLs are accepted automatically.
+    allow_origin_regex=r"https://[a-zA-Z0-9-]+\.vercel\.app",
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -101,35 +116,41 @@ app.add_middleware(
 DATASETS = {
     "demo": {
         "name": "Demo",
-        "description": "Small demonstration dataset",
-        "containers": GENERATED_DIR / "containers.csv",
-        "slots": GENERATED_DIR / "slots.csv",
+        "description": "Training voyage scenario",
+        "scenario": "Training voyage",
+        "route": "JNPT (Mumbai) → Colombo → Port Klang → Singapore",
+        "containers": GENERATED_DIR / "demo" / "containers.csv",
+        "slots": GENERATED_DIR / "demo" / "slots.csv",
     },
-
     "small": {
         "name": "Small",
-        "description": "Small benchmark dataset",
+        "description": "Near-capacity feeder service",
+        "scenario": "Peak feeder booking",
+        "route": "JNPT (Mumbai) → Colombo → Port Klang → Singapore",
         "containers": GENERATED_DIR / "small" / "containers.csv",
         "slots": GENERATED_DIR / "small" / "slots.csv",
     },
-
     "medium": {
         "name": "Medium",
-        "description": "Medium benchmark dataset",
+        "description": "Overbooked regional service",
+        "scenario": "Regional peak-demand manifest",
+        "route": "JNPT (Mumbai) → Colombo → Port Klang → Singapore",
         "containers": GENERATED_DIR / "medium" / "containers.csv",
         "slots": GENERATED_DIR / "medium" / "slots.csv",
     },
-
     "large": {
         "name": "Large",
-        "description": "Large benchmark dataset",
+        "description": "High-demand multi-port service",
+        "scenario": "Congested multi-port manifest",
+        "route": "JNPT (Mumbai) → Colombo → Port Klang → Singapore",
         "containers": GENERATED_DIR / "large" / "containers.csv",
         "slots": GENERATED_DIR / "large" / "slots.csv",
     },
-
     "custom": {
         "name": "Custom",
         "description": "User uploaded dataset",
+        "scenario": "Custom uploaded manifest",
+        "route": "Derived from uploaded destination order",
         "containers": CUSTOM_DIR / "containers.csv",
         "slots": CUSTOM_DIR / "slots.csv",
     },
@@ -154,26 +175,43 @@ class OptimizationRequest(BaseModel):
 # ---------------------------------------------------------
 
 def dataframe_records(df: pd.DataFrame):
+    """Return strict JSON-safe records (no NaN/Infinity values)."""
+    if df is None or df.empty:
+        return []
 
-    result = df.copy()
+    # pandas numeric columns keep NaN even after ``where(..., None)`` unless
+    # converted to object first. Starlette intentionally rejects NaN in JSON.
+    result = df.astype(object).where(pd.notna(df), None)
+    records = result.to_dict(orient="records")
 
-    result = result.where(
-        pd.notna(result),
-        None
-    )
-
-    return result.to_dict(
-        orient="records"
-    )
+    cleaned = []
+    for row in records:
+        safe_row = {}
+        for key, value in row.items():
+            if value is None:
+                safe_row[key] = None
+                continue
+            if hasattr(value, "item"):
+                try:
+                    value = value.item()
+                except Exception:
+                    pass
+            if isinstance(value, float):
+                import math
+                safe_row[key] = value if math.isfinite(value) else None
+            else:
+                safe_row[key] = value
+        cleaned.append(safe_row)
+    return cleaned
 
 
 def safe_number(value):
-
     if value is None:
         return None
-
     try:
-        return float(value)
+        import math
+        number = float(value)
+        return number if math.isfinite(number) else None
     except Exception:
         return value
 
@@ -330,8 +368,11 @@ def get_datasets():
                     "id": key,
                     "name": config["name"],
                     "description": config["description"],
+                    "scenario": config.get("scenario", ""),
+                    "route": config.get("route", ""),
                     "containers": len(containers),
                     "slots": len(slots),
+                    "demand_ratio": round(len(containers) / len(slots), 3) if len(slots) else None,
                     "available": validation["valid"],
                 })
 
@@ -341,8 +382,11 @@ def get_datasets():
                     "id": key,
                     "name": config["name"],
                     "description": config["description"],
+                    "scenario": config.get("scenario", ""),
+                    "route": config.get("route", ""),
                     "containers": 0,
                     "slots": 0,
+                    "demand_ratio": None,
                     "available": False,
                 })
 
@@ -412,11 +456,12 @@ def get_datasets():
     response.append({
         "id": "custom",
         "name": "Custom",
-        "description": (
-            "Upload your own container and slot CSV files"
-        ),
+        "description": "Uploaded manifest",
+        "scenario": "Custom uploaded manifest",
+        "route": "Derived from uploaded destination order",
         "containers": custom_containers,
         "slots": custom_slot_count,
+        "demand_ratio": round(custom_containers / custom_slot_count, 3) if custom_slot_count else None,
         "available": custom_available,
     })
 
@@ -435,8 +480,12 @@ def get_dataset(dataset_name: str):
         dataset_name
     )
 
+    config = DATASETS[dataset_name]
+
     return {
         "dataset": dataset_name,
+        "scenario": config.get("scenario", ""),
+        "route": config.get("route", ""),
         "containers": len(containers),
         "slots": len(slots),
 
@@ -463,173 +512,46 @@ def get_dataset(dataset_name: str):
 # ---------------------------------------------------------
 
 @app.post("/api/upload")
-async def upload_dataset(
-    containers_file: UploadFile = File(...),
-    slots_file: UploadFile = File(...),
-):
+async def upload_dataset(files: list[UploadFile] = File(...)):
+    """Smart multi-CSV importer.
 
-    # -----------------------------------------------------
-    # BASIC FILE CHECK
-    # -----------------------------------------------------
-
-    if not containers_file.filename:
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "message": "Container CSV file was not selected."
-            }
-        )
-
-    if not slots_file.filename:
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "message": "Slot CSV file was not selected."
-            }
-        )
-
-
-    if not containers_file.filename.lower().endswith(
-        ".csv"
-    ):
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "message": (
-                    "Container data must be uploaded "
-                    "as a CSV file."
-                )
-            }
-        )
-
-
-    if not slots_file.filename.lower().endswith(
-        ".csv"
-    ):
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "message": (
-                    "Slot data must be uploaded "
-                    "as a CSV file."
-                )
-            }
-        )
-
-
-    # -----------------------------------------------------
-    # READ FILES WITHOUT SAVING THEM FIRST
-    # -----------------------------------------------------
-
-    container_bytes = (
-        await containers_file.read()
-    )
-
-    slot_bytes = (
-        await slots_file.read()
-    )
-
-
-    # -----------------------------------------------------
-    # PARSE CSV
-    # -----------------------------------------------------
-
+    Users may upload 2 or more CSV files in any order. The importer detects
+    container/cargo versus vessel-slot data, normalizes common column aliases,
+    cleans common value formats and merges multiple files of the same type.
+    """
+    if len(files) < 2:
+        raise HTTPException(status_code=400, detail={"message": "Upload at least two CSV files: container/cargo data and vessel slot data."})
+    items = []
+    for file in files:
+        if not file.filename or not file.filename.lower().endswith(".csv"):
+            raise HTTPException(status_code=400, detail={"message": f"{file.filename or 'Selected file'} is not a CSV file."})
+        raw = await file.read()
+        if not raw:
+            raise HTTPException(status_code=400, detail={"message": f"{file.filename} is empty."})
+        items.append((file.filename, raw))
     try:
-
-        containers = pd.read_csv(
-            io.BytesIO(container_bytes)
-        )
-
-        slots = pd.read_csv(
-            io.BytesIO(slot_bytes)
-        )
-
-    except Exception as error:
-
-        # Remove any previous custom dataset so that
-        # an invalid upload cannot leave stale data.
-
-        remove_custom_dataset()
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "message": (
-                    f"Could not read the uploaded CSV files: "
-                    f"{error}"
-                )
-            }
-        )
-
-
-    # -----------------------------------------------------
-    # VALIDATE DATASET
-    # -----------------------------------------------------
-
-    validation = validate_dataset(
-        containers,
-        slots
-    )
-
-
+        containers, slots, reports, warnings = ingest_files(items)
+    except ValueError as error:
+        raise HTTPException(status_code=400, detail={"message": str(error)})
+    validation = validate_dataset(containers, slots)
     if not validation["valid"]:
-
-        # IMPORTANT:
-        # Do not keep the previous custom dataset.
-        remove_custom_dataset()
-
-        raise HTTPException(
-            status_code=400,
-            detail=validation
-        )
-
-
-    # -----------------------------------------------------
-    # ONLY SAVE AFTER SUCCESSFUL VALIDATION
-    # -----------------------------------------------------
-
-    container_path = (
-        CUSTOM_DIR / "containers.csv"
-    )
-
-    slot_path = (
-        CUSTOM_DIR / "slots.csv"
-    )
-
-    container_path.write_bytes(
-        container_bytes
-    )
-
-    slot_path.write_bytes(
-        slot_bytes
-    )
-
-
-    return {
-        "message": (
-            "Custom dataset uploaded and validated successfully."
-        ),
-
-        "dataset": "custom",
-
-        "containers": len(containers),
-
-        "slots": len(slots),
-
-        "container_columns": list(
-            containers.columns
-        ),
-
-        "slot_columns": list(
-            slots.columns
-        ),
-
-        **validation,
+        raise HTTPException(status_code=400, detail={"message": "The files were recognized and cleaned, but the normalized dataset is still invalid.", **validation})
+    container_path = CUSTOM_DIR / "containers.csv"
+    slot_path = CUSTOM_DIR / "slots.csv"
+    containers.to_csv(container_path, index=False)
+    slots.to_csv(slot_path, index=False)
+    metadata = {
+        "dataset_id": "custom",
+        "name": "Custom Dataset",
+        "validation_status": "valid",
+        "container_count": len(containers),
+        "slot_count": len(slots),
+        "files_processed": len(files),
+        "file_reports": reports,
+        "warnings": warnings,
     }
+    (CUSTOM_DIR / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
+    return {"message": "Custom dataset is ready.", "dataset": "custom", "containers": len(containers), "slots": len(slots), **metadata, **validation}
 
 
 # ---------------------------------------------------------
@@ -859,11 +781,7 @@ def optimize(
             comparison.append(row)
 
 
-            solutions[
-                algorithm_name
-            ] = dataframe_records(
-                solution
-            )
+            solutions[algorithm_name] = solution.copy()
 
 
         except Exception as error:
@@ -891,92 +809,54 @@ def optimize(
 
 
     # -----------------------------------------------------
-    # SAVE COMPARISON
+    # SAVE COMPARISON + USER EXPORTS
     # -----------------------------------------------------
 
-    comparison_file = (
-        RESULT_DIR
-        / f"{run_id}_algorithm_comparison.csv"
+    comparison_file = RESULT_DIR / f"{run_id}_algorithm_comparison.csv"
+    comparison_df = pd.DataFrame(comparison)
+    comparison_df.to_csv(comparison_file, index=False)
+
+    total_runtime = time.perf_counter() - started_all
+    config = DATASETS[request.dataset]
+    scenario = {
+        "scenario": config.get("scenario", ""),
+        "route": config.get("route", ""),
+    }
+
+    export_files_abs, recommended_algorithm, export_errors = create_exports(
+        result_dir=RESULT_DIR,
+        run_id=run_id,
+        dataset_name=request.dataset,
+        scenario=scenario,
+        comparison=comparison,
+        solutions=solutions,
+        container_count=len(containers),
+        slot_count=len(slots),
+        total_runtime=round(total_runtime, 6),
     )
 
-    comparison_json = (
-        RESULT_DIR
-        / f"{run_id}_algorithm_comparison.json"
-    )
-
-
-    comparison_df = pd.DataFrame(
-        comparison
-    )
-
-
-    comparison_df.to_csv(
-        comparison_file,
-        index=False
-    )
-
-
-    with open(
-        comparison_json,
-        "w",
-        encoding="utf-8"
-    ) as file:
-
-        json.dump(
-            comparison,
-            file,
-            indent=4
-        )
-
-
-    total_runtime = (
-        time.perf_counter()
-        - started_all
-    )
-
+    export_files = {
+        key: str(Path(path).resolve().relative_to(PROJECT_ROOT.resolve()))
+        for key, path in export_files_abs.items()
+    }
+    export_files["comparison_csv"] = str(comparison_file.relative_to(PROJECT_ROOT))
 
     return {
-
-        "run_id":
-            run_id,
-
-        "dataset":
-            request.dataset,
-
-        "container_count":
-            len(containers),
-
-        "slot_count":
-            len(slots),
-
-        "total_runtime_seconds":
-            round(
-                total_runtime,
-                6
-            ),
-
-        "comparison":
-            comparison,
-
-        "solutions":
-            solutions,
-
-        "export_files": {
-
-            "csv":
-                str(
-                    comparison_file.relative_to(
-                        PROJECT_ROOT
-                    )
-                ),
-
-            "json":
-                str(
-                    comparison_json.relative_to(
-                        PROJECT_ROOT
-                    )
-                ),
+        "run_id": run_id,
+        "dataset": request.dataset,
+        "scenario": scenario,
+        "container_count": len(containers),
+        "slot_count": len(slots),
+        "demand_ratio": round(len(containers) / len(slots), 3) if len(slots) else None,
+        "total_runtime_seconds": round(total_runtime, 6),
+        "comparison": comparison,
+        "recommended_algorithm": recommended_algorithm,
+        "solutions": {
+            name: dataframe_records(solution)
+            for name, solution in solutions.items()
         },
+        "export_files": export_files,
+        "export_errors": export_errors,
     }
 
 

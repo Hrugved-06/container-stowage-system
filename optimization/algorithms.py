@@ -253,88 +253,131 @@ def random_neighbor(
     solution,
     containers,
     slots,
-    rng
+    rng,
+    container_lookup=None,
+    slot_lookup=None,
 ):
+    """Create a feasible neighboring stowage plan.
 
+    The original implementation could only move a container into an EMPTY slot.
+    That means it became effectively frozen when the vessel was full (for example
+    100 uploaded containers competing for 80 slots). This version can also swap
+    assigned containers and exchange an assigned container with an unassigned one.
+    """
     candidate = solution.copy()
 
-    assigned_rows = candidate[
-        candidate["slot_id"].notna()
-    ].index.tolist()
-
+    assigned_rows = candidate[candidate["slot_id"].notna()].index.tolist()
+    unassigned_rows = candidate[candidate["slot_id"].isna()].index.tolist()
     if not assigned_rows:
         return candidate
 
-    row_index = rng.choice(
-        assigned_rows
-    )
+    if container_lookup is None:
+        container_lookup = containers.set_index("container_id")
+    if slot_lookup is None:
+        slot_lookup = slots.set_index("slot_id")
 
-    container_id = candidate.loc[
-        row_index,
-        "container_id"
-    ]
+    actions = ["swap"]
+    if len(assigned_rows) < len(slots):
+        used_slots = set(candidate["slot_id"].dropna().astype(str))
+        free_slots = slots[~slots["slot_id"].astype(str).isin(used_slots)]
+        if not free_slots.empty:
+            actions.append("move")
+    else:
+        free_slots = slots.iloc[0:0]
+    if unassigned_rows:
+        actions.extend(["promote", "promote"])
 
-    container = containers[
-        containers["container_id"]
-        == container_id
-    ].iloc[0]
+    action = rng.choice(actions)
 
-    available = slots[
-        ~slots["slot_id"].isin(
-            candidate["slot_id"].dropna()
-        )
-    ]
-
-    valid = []
-
-    for _, slot in available.iterrows():
-
-        if check_all_constraints(
-            container,
-            slot
-        )["valid"]:
-
-            valid.append(
-                slot
-            )
-
-    if not valid:
+    if action == "move":
+        row_index = rng.choice(assigned_rows)
+        cid = candidate.at[row_index, "container_id"]
+        container = container_lookup.loc[cid]
+        valid = [
+            slot for _, slot in free_slots.iterrows()
+            if check_all_constraints(container, slot)["valid"]
+        ]
+        if not valid:
+            return candidate
+        slot = rng.choice(valid)
+        candidate.loc[row_index, ["slot_id", "bay", "row", "tier"]] = [
+            slot["slot_id"], slot["bay"], slot["row"], slot["tier"]
+        ]
         return candidate
 
-    selected = rng.choice(
-        valid
-    )
+    if action == "promote":
+        incoming_row = rng.choice(unassigned_rows)
+        outgoing_row = rng.choice(assigned_rows)
+        incoming_id = candidate.at[incoming_row, "container_id"]
+        outgoing_id = candidate.at[outgoing_row, "container_id"]
+        slot_id = candidate.at[outgoing_row, "slot_id"]
+        incoming = container_lookup.loc[incoming_id]
+        slot = slot_lookup.loc[slot_id]
+        if not check_all_constraints(incoming, slot)["valid"]:
+            return candidate
 
-    candidate.loc[
-        row_index,
-        [
-            "slot_id",
-            "bay",
-            "row",
-            "tier"
+        # Put the incoming container in the occupied slot.
+        candidate.loc[incoming_row, ["slot_id", "bay", "row", "tier"]] = [
+            slot_id,
+            candidate.at[outgoing_row, "bay"],
+            candidate.at[outgoing_row, "row"],
+            candidate.at[outgoing_row, "tier"],
         ]
-    ] = [
-        selected["slot_id"],
-        selected["bay"],
-        selected["row"],
-        selected["tier"]
-    ]
+        # The displaced container becomes unassigned.
+        candidate.loc[outgoing_row, ["slot_id", "bay", "row", "tier"]] = [None, None, None, None]
+        return candidate
 
+    # Swap two occupied positions. This keeps slot utilization constant while
+    # letting the metaheuristics improve destination/rehandling and balance.
+    if len(assigned_rows) < 2:
+        return candidate
+    a, b = rng.sample(assigned_rows, 2)
+    cid_a = candidate.at[a, "container_id"]
+    cid_b = candidate.at[b, "container_id"]
+    slot_a_id = candidate.at[a, "slot_id"]
+    slot_b_id = candidate.at[b, "slot_id"]
+    container_a = container_lookup.loc[cid_a]
+    container_b = container_lookup.loc[cid_b]
+    slot_a = slot_lookup.loc[slot_a_id]
+    slot_b = slot_lookup.loc[slot_b_id]
+
+    if not check_all_constraints(container_a, slot_b)["valid"]:
+        return candidate
+    if not check_all_constraints(container_b, slot_a)["valid"]:
+        return candidate
+
+    pos_a = [candidate.at[a, c] for c in ["slot_id", "bay", "row", "tier"]]
+    pos_b = [candidate.at[b, c] for c in ["slot_id", "bay", "row", "tier"]]
+    candidate.loc[a, ["slot_id", "bay", "row", "tier"]] = pos_b
+    candidate.loc[b, ["slot_id", "bay", "row", "tier"]] = pos_a
     return candidate
+
+
+def _interactive_sa_iterations(container_count):
+    if container_count <= 30:
+        return 260
+    if container_count <= 120:
+        return 160
+    if container_count <= 250:
+        return 70
+    return 18
 
 
 def simulated_annealing(
     containers,
     slots,
-    iterations=3000,
+    iterations=None,
     initial_temperature=1000.0,
-    cooling=0.995,
+    cooling=0.985,
     seed=42
 ):
 
-    rng = random.Random(
-        seed
-    )
+    rng = random.Random(seed)
+    if iterations is None:
+        iterations = _interactive_sa_iterations(len(containers))
+
+    container_lookup = containers.set_index("container_id")
+    slot_lookup = slots.set_index("slot_id")
 
     current = randomized_greedy(
         containers,
@@ -358,7 +401,9 @@ def simulated_annealing(
             current,
             containers,
             slots,
-            rng
+            rng,
+            container_lookup=container_lookup,
+            slot_lookup=slot_lookup,
         )
 
         candidate_score = calculate_objective_score(
@@ -400,15 +445,22 @@ def simulated_annealing(
 def genetic_algorithm(
     containers,
     slots,
-    population_size=30,
-    generations=100,
-    mutation_rate=0.10,
+    population_size=None,
+    generations=None,
+    mutation_rate=0.20,
     seed=42
 ):
 
-    rng = random.Random(
-        seed
-    )
+    rng = random.Random(seed)
+
+    n = len(containers)
+    if population_size is None:
+        population_size = 14 if n <= 120 else (9 if n <= 250 else 5)
+    if generations is None:
+        generations = 16 if n <= 120 else (8 if n <= 250 else 4)
+
+    container_lookup = containers.set_index("container_id")
+    slot_lookup = slots.set_index("slot_id")
 
     population = []
 
@@ -466,7 +518,9 @@ def genetic_algorithm(
                     child,
                     containers,
                     slots,
-                    rng
+                    rng,
+                    container_lookup=container_lookup,
+                    slot_lookup=slot_lookup,
                 )
 
             new_population.append(
@@ -485,7 +539,7 @@ def genetic_algorithm(
 def cp_sat(
     containers,
     slots,
-    time_limit=30
+    time_limit=8
 ):
 
     from ortools.sat.python import cp_model

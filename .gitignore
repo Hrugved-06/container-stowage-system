@@ -1,29 +1,33 @@
-# Python virtual environment
-venv/
+# Python
 .venv/
-
-# Python cache
+venv/
 __pycache__/
 *.py[cod]
-*.pyo
 .pytest_cache/
 
-# Environment/secrets
+# Node / frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# Local environment files
 .env
 .env.*
 !.env.example
+!frontend/.env.example
 
-# VS Code local settings
+# Runtime-generated custom uploads and exports
+datasets/custom/*
+!datasets/custom/.gitkeep
+experiments/results/*
+!experiments/results/.gitkeep
+
+# IDE / OS
 .vscode/
-
-# Node.js
-frontend/node_modules/
-frontend/dist/
-
-# Logs and temporary files
-*.log
-*.tmp
-
-# OS files
+.idea/
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log

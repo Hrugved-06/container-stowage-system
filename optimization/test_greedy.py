@@ -1,6 +1,6 @@
 import pandas as pd
 
-from greedy import greedy_stowage
+from optimization.greedy import greedy_stowage
 
 
 containers = pd.read_csv(

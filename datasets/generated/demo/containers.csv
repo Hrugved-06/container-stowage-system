@@ -1,0 +1,13 @@
+container_id,size,weight,destination,destination_order,priority,hazardous,refrigerated
+C00001,20,8332,Colombo,1,2,False,False
+C00002,20,12319,Port Klang,2,2,False,False
+C00003,20,10925,Colombo,1,2,False,False
+C00004,20,22243,Singapore,3,2,False,False
+C00005,20,19963,Colombo,1,3,False,False
+C00006,40,14310,Singapore,3,1,False,False
+C00007,20,17085,Singapore,3,2,False,True
+C00008,20,11648,Colombo,1,1,False,False
+C00009,20,23506,Colombo,1,2,False,True
+C00010,20,11453,Port Klang,2,2,False,False
+C00011,20,16296,Singapore,3,1,False,False
+C00012,20,10024,Colombo,1,1,False,True

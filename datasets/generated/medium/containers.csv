@@ -1,101 +1,177 @@
 container_id,size,weight,destination,destination_order,priority,hazardous,refrigerated
-C00001,20,8819,Singapore,3,1,False,False
-C00002,20,27349,Colombo,4,1,True,False
-C00003,20,26390,Dubai,2,3,False,False
-C00004,20,22719,Singapore,3,1,False,False
-C00005,40,19149,Singapore,3,1,False,False
-C00006,20,11039,Colombo,4,1,False,False
-C00007,40,34447,Mumbai,1,3,False,False
-C00008,40,10582,Singapore,3,3,False,False
-C00009,20,10279,Mumbai,1,3,False,False
-C00010,20,15628,Mumbai,1,2,False,False
-C00011,40,13329,Singapore,3,2,False,False
-C00012,20,27960,Dubai,2,3,False,False
-C00013,40,16845,Dubai,2,3,False,False
-C00014,20,15505,Mumbai,1,2,False,True
-C00015,40,14967,Colombo,4,2,False,False
-C00016,20,16679,Dubai,2,1,False,False
-C00017,40,27121,Colombo,4,2,False,False
-C00018,40,10978,Mumbai,1,1,False,False
-C00019,40,27543,Mumbai,1,2,False,False
-C00020,40,26128,Mumbai,1,3,False,False
-C00021,40,33185,Singapore,3,1,False,False
-C00022,20,16630,Dubai,2,3,False,False
-C00023,40,28937,Dubai,2,1,False,False
-C00024,20,27626,Singapore,3,2,True,False
-C00025,40,15846,Mumbai,1,1,False,False
-C00026,20,23924,Mumbai,1,3,False,False
-C00027,40,26015,Dubai,2,2,False,False
-C00028,20,25671,Dubai,2,3,False,False
-C00029,40,22355,Colombo,4,1,False,True
-C00030,20,27277,Dubai,2,3,False,True
-C00031,20,15501,Mumbai,1,1,False,True
-C00032,20,17125,Colombo,4,1,False,False
-C00033,40,15962,Colombo,4,2,False,True
-C00034,40,19609,Colombo,4,2,False,False
-C00035,20,9986,Colombo,4,3,False,False
-C00036,20,14278,Dubai,2,3,False,False
-C00037,40,23159,Dubai,2,1,False,False
-C00038,20,9657,Mumbai,1,1,False,False
-C00039,20,21317,Colombo,4,2,False,False
-C00040,20,13394,Colombo,4,1,False,False
-C00041,40,17347,Colombo,4,3,False,False
-C00042,40,13072,Dubai,2,2,False,True
-C00043,20,18276,Mumbai,1,1,False,False
-C00044,20,9863,Mumbai,1,1,True,True
-C00045,20,21230,Mumbai,1,3,False,False
-C00046,20,21737,Singapore,3,2,False,False
-C00047,20,16703,Colombo,4,1,False,False
-C00048,40,32637,Mumbai,1,1,False,False
-C00049,20,10400,Dubai,2,3,False,False
-C00050,20,16004,Singapore,3,2,False,False
-C00051,40,28043,Mumbai,1,3,False,False
-C00052,20,12400,Singapore,3,1,False,False
-C00053,20,16924,Singapore,3,3,False,False
-C00054,40,24561,Colombo,4,2,False,False
-C00055,20,28784,Colombo,4,2,True,False
-C00056,20,28876,Singapore,3,1,False,False
-C00057,40,26379,Mumbai,1,1,True,False
-C00058,20,25877,Mumbai,1,2,False,False
-C00059,20,9370,Singapore,3,2,False,False
-C00060,20,19724,Dubai,2,3,False,True
-C00061,40,28337,Dubai,2,1,False,False
-C00062,20,21510,Mumbai,1,1,False,False
-C00063,40,34287,Dubai,2,2,False,False
-C00064,40,9268,Colombo,4,1,False,False
-C00065,40,18000,Dubai,2,1,True,False
-C00066,40,17129,Mumbai,1,2,False,False
-C00067,40,8904,Mumbai,1,2,False,False
-C00068,40,9253,Mumbai,1,3,False,False
-C00069,40,22299,Mumbai,1,2,False,False
-C00070,20,22288,Mumbai,1,3,False,False
-C00071,20,19934,Colombo,4,1,False,False
-C00072,40,29737,Mumbai,1,3,False,False
-C00073,40,18688,Colombo,4,3,False,False
-C00074,40,29788,Colombo,4,3,False,False
-C00075,40,21306,Mumbai,1,2,False,False
-C00076,40,23236,Colombo,4,2,False,False
-C00077,20,29589,Mumbai,1,2,False,False
-C00078,40,11060,Dubai,2,3,False,False
-C00079,20,8800,Mumbai,1,1,False,False
-C00080,20,22923,Colombo,4,3,False,False
-C00081,40,24199,Colombo,4,1,False,False
-C00082,20,21931,Dubai,2,1,False,False
-C00083,40,9645,Dubai,2,1,False,False
-C00084,40,32748,Colombo,4,3,False,False
-C00085,40,25952,Colombo,4,1,False,False
-C00086,40,32634,Dubai,2,3,False,False
-C00087,40,28537,Dubai,2,2,False,False
-C00088,20,16903,Singapore,3,2,False,True
-C00089,20,15577,Colombo,4,3,False,False
-C00090,40,21356,Singapore,3,3,False,True
-C00091,40,20762,Mumbai,1,3,False,True
-C00092,40,17784,Colombo,4,2,False,False
-C00093,20,23998,Dubai,2,2,False,True
-C00094,40,29917,Colombo,4,3,False,False
-C00095,20,28390,Mumbai,1,2,False,False
-C00096,20,29061,Colombo,4,1,False,False
-C00097,40,20422,Singapore,3,1,False,False
-C00098,40,17117,Colombo,4,2,False,False
-C00099,20,19467,Dubai,2,3,True,False
-C00100,20,9016,Dubai,2,1,False,False
+C00001,40,20422,Singapore,3,3,True,False
+C00002,40,18310,Singapore,3,2,False,False
+C00003,40,12265,Singapore,3,1,False,False
+C00004,20,19668,Colombo,1,2,False,False
+C00005,40,21084,Colombo,1,1,False,True
+C00006,20,19829,Port Klang,2,2,False,False
+C00007,20,16587,Singapore,3,1,False,False
+C00008,20,15006,Port Klang,2,2,False,False
+C00009,20,17071,Singapore,3,2,False,False
+C00010,40,14845,Port Klang,2,2,False,False
+C00011,40,17723,Colombo,1,2,False,False
+C00012,40,27102,Colombo,1,1,False,False
+C00013,20,20131,Colombo,1,3,False,False
+C00014,40,11270,Colombo,1,3,False,True
+C00015,40,22704,Singapore,3,1,False,False
+C00016,20,15227,Port Klang,2,3,False,False
+C00017,40,26328,Colombo,1,3,False,False
+C00018,40,21819,Singapore,3,3,True,False
+C00019,40,18178,Singapore,3,2,False,False
+C00020,40,22679,Singapore,3,1,False,False
+C00021,20,12061,Colombo,1,1,False,False
+C00022,20,19930,Port Klang,2,3,False,False
+C00023,20,8986,Colombo,1,2,False,False
+C00024,20,14871,Colombo,1,2,False,False
+C00025,40,19569,Colombo,1,2,False,True
+C00026,20,23059,Port Klang,2,1,False,False
+C00027,40,17646,Port Klang,2,1,False,False
+C00028,20,20645,Colombo,1,1,False,False
+C00029,20,22093,Singapore,3,3,False,False
+C00030,20,17164,Singapore,3,2,False,False
+C00031,40,20456,Colombo,1,3,False,False
+C00032,20,15352,Colombo,1,2,False,False
+C00033,40,13346,Singapore,3,2,False,True
+C00034,20,26069,Port Klang,2,1,False,False
+C00035,40,21083,Colombo,1,2,False,False
+C00036,40,17728,Colombo,1,2,False,False
+C00037,20,10689,Colombo,1,3,False,False
+C00038,40,24640,Singapore,3,2,False,False
+C00039,40,15050,Singapore,3,3,False,False
+C00040,40,18681,Singapore,3,2,False,False
+C00041,20,16461,Singapore,3,2,False,False
+C00042,20,21942,Port Klang,2,2,False,False
+C00043,20,14333,Port Klang,2,2,False,False
+C00044,20,12616,Colombo,1,2,False,False
+C00045,20,19712,Singapore,3,3,False,False
+C00046,20,17003,Port Klang,2,1,False,False
+C00047,40,27025,Singapore,3,2,False,False
+C00048,20,18236,Colombo,1,1,True,False
+C00049,40,16836,Port Klang,2,2,False,True
+C00050,40,20250,Colombo,1,1,False,False
+C00051,20,12294,Port Klang,2,3,False,False
+C00052,20,22467,Singapore,3,2,False,False
+C00053,20,9433,Colombo,1,1,False,False
+C00054,20,25685,Port Klang,2,3,False,False
+C00055,40,24943,Port Klang,2,3,False,False
+C00056,20,13681,Port Klang,2,3,False,False
+C00057,20,11447,Singapore,3,2,False,False
+C00058,40,14939,Singapore,3,2,False,False
+C00059,40,18396,Port Klang,2,3,False,True
+C00060,20,20434,Singapore,3,2,False,False
+C00061,40,11133,Colombo,1,3,False,False
+C00062,40,19133,Port Klang,2,3,False,False
+C00063,20,10331,Singapore,3,2,False,False
+C00064,20,13015,Singapore,3,3,False,False
+C00065,20,12069,Port Klang,2,1,False,False
+C00066,20,21649,Port Klang,2,2,False,False
+C00067,40,21627,Colombo,1,2,False,False
+C00068,20,15263,Port Klang,2,2,False,False
+C00069,20,18284,Colombo,1,3,False,False
+C00070,20,11880,Singapore,3,2,False,False
+C00071,40,11584,Colombo,1,2,False,False
+C00072,20,9621,Port Klang,2,3,True,False
+C00073,20,15629,Colombo,1,3,False,False
+C00074,20,17687,Colombo,1,3,False,False
+C00075,40,11660,Singapore,3,2,False,False
+C00076,40,11489,Colombo,1,2,False,False
+C00077,20,22950,Colombo,1,2,False,False
+C00078,20,8298,Singapore,3,3,True,False
+C00079,40,22871,Colombo,1,1,True,False
+C00080,20,11007,Singapore,3,2,False,False
+C00081,20,21361,Colombo,1,2,False,False
+C00082,40,25328,Port Klang,2,3,False,False
+C00083,40,13011,Port Klang,2,2,False,True
+C00084,40,20061,Colombo,1,2,True,False
+C00085,40,22714,Singapore,3,2,True,False
+C00086,40,24105,Colombo,1,1,False,False
+C00087,20,12613,Colombo,1,2,False,False
+C00088,20,17814,Colombo,1,1,False,False
+C00089,20,20690,Port Klang,2,2,False,False
+C00090,40,22166,Singapore,3,2,False,False
+C00091,40,14478,Port Klang,2,3,False,False
+C00092,40,21427,Colombo,1,1,False,False
+C00093,20,18573,Singapore,3,1,False,True
+C00094,20,21959,Port Klang,2,2,False,False
+C00095,20,21627,Colombo,1,3,False,True
+C00096,20,11782,Singapore,3,1,False,False
+C00097,20,13069,Singapore,3,3,False,False
+C00098,20,8756,Singapore,3,2,False,False
+C00099,20,17674,Singapore,3,2,True,False
+C00100,40,17178,Singapore,3,2,True,False
+C00101,40,19697,Singapore,3,2,False,False
+C00102,40,19847,Colombo,1,3,False,False
+C00103,20,18160,Port Klang,2,3,False,False
+C00104,40,21028,Colombo,1,1,False,False
+C00105,20,12733,Colombo,1,1,False,False
+C00106,20,6876,Port Klang,2,2,False,True
+C00107,20,16030,Singapore,3,2,False,True
+C00108,40,20604,Colombo,1,2,False,False
+C00109,40,14987,Port Klang,2,2,False,False
+C00110,20,17112,Colombo,1,1,False,False
+C00111,20,13276,Singapore,3,1,False,False
+C00112,20,15014,Port Klang,2,2,False,True
+C00113,40,19532,Port Klang,2,3,False,False
+C00114,20,20114,Colombo,1,1,False,False
+C00115,20,16648,Colombo,1,2,False,False
+C00116,40,20434,Singapore,3,2,False,False
+C00117,20,17252,Colombo,1,2,False,False
+C00118,20,21949,Colombo,1,1,False,False
+C00119,20,18191,Singapore,3,2,False,False
+C00120,20,25408,Singapore,3,2,False,False
+C00121,20,19687,Singapore,3,2,False,False
+C00122,20,19583,Port Klang,2,2,False,True
+C00123,40,18951,Port Klang,2,2,True,False
+C00124,40,19983,Colombo,1,2,True,False
+C00125,20,22755,Port Klang,2,2,False,True
+C00126,20,8921,Colombo,1,2,False,False
+C00127,20,24494,Colombo,1,2,False,False
+C00128,40,25709,Port Klang,2,2,False,False
+C00129,20,16695,Port Klang,2,3,False,False
+C00130,20,8456,Singapore,3,3,False,False
+C00131,20,22020,Port Klang,2,2,False,False
+C00132,20,14364,Port Klang,2,2,False,False
+C00133,20,13609,Port Klang,2,2,False,True
+C00134,20,15560,Colombo,1,2,False,False
+C00135,20,22217,Singapore,3,3,False,False
+C00136,20,23548,Colombo,1,2,False,False
+C00137,20,14280,Colombo,1,2,False,False
+C00138,20,12138,Singapore,3,2,False,False
+C00139,40,21257,Singapore,3,2,False,False
+C00140,40,24026,Colombo,1,3,False,True
+C00141,40,21740,Singapore,3,2,False,False
+C00142,20,16258,Singapore,3,2,False,True
+C00143,40,20226,Colombo,1,2,False,True
+C00144,40,13705,Colombo,1,2,False,False
+C00145,20,24126,Colombo,1,3,False,False
+C00146,20,24624,Port Klang,2,3,False,False
+C00147,20,24462,Port Klang,2,1,False,False
+C00148,40,19141,Singapore,3,2,False,False
+C00149,20,19975,Colombo,1,1,False,False
+C00150,20,18002,Singapore,3,3,True,True
+C00151,40,27594,Singapore,3,1,True,False
+C00152,20,14392,Singapore,3,2,False,False
+C00153,40,21436,Colombo,1,2,False,True
+C00154,20,15924,Colombo,1,2,False,False
+C00155,20,22517,Singapore,3,1,False,False
+C00156,20,9001,Singapore,3,3,True,False
+C00157,20,7917,Colombo,1,3,False,False
+C00158,20,17490,Port Klang,2,2,False,False
+C00159,20,17410,Colombo,1,3,False,False
+C00160,40,21973,Colombo,1,2,False,True
+C00161,20,11274,Colombo,1,2,False,False
+C00162,40,20427,Colombo,1,3,False,False
+C00163,40,20991,Colombo,1,2,False,False
+C00164,20,17022,Colombo,1,2,False,True
+C00165,20,17754,Colombo,1,1,False,False
+C00166,20,17640,Colombo,1,2,False,False
+C00167,40,27376,Singapore,3,2,False,False
+C00168,20,12901,Colombo,1,2,False,True
+C00169,20,17154,Singapore,3,1,False,False
+C00170,20,15292,Singapore,3,3,False,False
+C00171,40,20944,Singapore,3,3,False,False
+C00172,40,20947,Colombo,1,2,False,False
+C00173,20,9294,Colombo,1,3,False,False
+C00174,20,14599,Port Klang,2,3,False,False
+C00175,20,11528,Colombo,1,3,False,True
+C00176,20,16099,Port Klang,2,2,False,False

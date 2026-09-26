@@ -1,0 +1,18 @@
+REVISION SUMMARY
+
+1. Removed developer-style explanations from the Custom Dataset screen.
+2. Fixed custom multi-file optimization response crash caused by NaN values in unassigned slot fields.
+3. Improved Simulated Annealing / Genetic Algorithm behavior for full or over-demand datasets by allowing feasible swaps and assigned/unassigned exchanges.
+4. Added dataset-size-aware iteration budgets so the web request does not appear frozen on larger manifests.
+5. Replaced the built-in benchmark profiles with deterministic operationally realistic synthetic scenarios:
+   - Demo: 12 / 12
+   - Small: 84 / 80
+   - Medium: 176 / 160
+   - Large: 460 / 400
+6. Added scenario/route metadata for the built-in datasets.
+7. Added recommended-plan exports in CSV, JSON, Excel, Word, PDF and ZIP bundle.
+8. Added responsive local-development CORS support for any localhost Vite port.
+9. Kept the existing seven-algorithm architecture and existing constraint framework.
+
+IMPORTANT ACADEMIC WORDING
+The built-in datasets are realistic synthetic benchmark scenarios. Do not claim that they are actual proprietary shipping-line manifests. The route and operational characteristics are modeled to make optimization non-trivial and suitable for academic evaluation.

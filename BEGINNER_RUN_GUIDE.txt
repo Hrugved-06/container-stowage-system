@@ -1,0 +1,58 @@
+AI-DRIVEN CONTAINER VESSEL CARGO SCHEDULING AND VOYAGE PLANNING SYSTEM
+BEGINNER RUN GUIDE (Windows)
+
+1) Extract the ZIP to a simple folder, for example:
+   Desktop\container-stowage-system
+
+2) Open that folder in VS Code.
+
+3) Open Terminal > New Terminal.
+
+4) Create a fresh Python environment:
+   py -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+
+5) Start the backend and KEEP THIS TERMINAL OPEN:
+   uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+6) Open a SECOND terminal in VS Code:
+   cd frontend
+   npm install
+   npm run dev
+
+7) Open the URL printed by Vite (normally http://localhost:5173).
+
+BUILT-IN DATASETS
+- Demo: 12 containers / 12 slots
+- Small: 84 containers / 80 slots
+- Medium: 176 containers / 160 slots
+- Large: 460 containers / 400 slots
+
+Small, Medium and Large intentionally create real optimization pressure. They are realistic synthetic academic scenarios, not proprietary shipping-line manifests. They model a multi-port service with mixed 20/40-ft cargo, destination order, priority, reefer cargo and hazardous-cargo restrictions.
+
+CUSTOM DATASET
+1) Select Custom in Dataset.
+2) Click Select CSV Files.
+3) Select 2 or more related CSV files together. You may select multiple container/cargo files plus one or more slot files.
+4) Click Upload Dataset.
+5) When the screen shows "Dataset ready", choose the algorithms.
+6) Click RUN OPTIMIZATION.
+
+The importer can normalize many common alternative headings and values. If a CSV is too ambiguous to identify as cargo/container data or vessel-slot data, it is rejected with a readable message instead of silently producing incorrect data.
+
+EXPORTS
+After optimization, use the buttons in Recommended Plan to download:
+- CSV
+- Excel (.xlsx)
+- Word (.docx)
+- PDF
+- JSON
+- All Files (.zip)
+
+The CSV is the recommended optimized stowage plan. Excel contains summary, algorithm comparison, recommended plan and individual successful algorithm plans. Word and PDF contain a presentation-ready report and recommended stowage plan.
+
+IF SOMETHING DOES NOT START
+- Backend error: check that the first terminal still shows Uvicorn running.
+- Frontend error: run npm install again inside the frontend folder.
+- CP-SAT unavailable: make sure pip install -r requirements.txt completed successfully because CP-SAT requires OR-Tools.

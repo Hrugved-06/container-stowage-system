@@ -33,3 +33,6 @@ typing_extensions==4.16.0
 tzdata==2026.4
 urllib3==2.8.0
 uvicorn==0.53.0
+openpyxl==3.1.5
+python-docx==1.2.0
+reportlab==4.4.9

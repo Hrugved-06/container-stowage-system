@@ -1297,3 +1297,116 @@ footer {
   }
 
 }
+.smart-upload-panel{border:1px dashed rgba(148,163,184,.55);border-radius:18px;padding:24px;background:linear-gradient(135deg,rgba(15,23,42,.03),rgba(14,165,233,.06));width:100%}.smart-upload-panel p{max-width:850px;line-height:1.65}.upload-summary{margin-top:12px;display:grid;gap:6px;font-size:.92rem}.upload-summary details{margin-top:6px}.upload-summary summary{cursor:pointer;font-weight:700}
+
+
+/* =========================================================
+   REVISION: REALISTIC DATASET + EXPORT UI
+   ========================================================= */
+
+.dataset-info .dataset-scenario {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.dataset-info .dataset-scenario strong {
+  font-size: 13px;
+}
+
+.dataset-info .dataset-scenario span {
+  line-height: 1.45;
+}
+
+.smart-upload-panel.compact-upload {
+  background: white;
+  border: 1px solid #dfe5ef;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.compact-success {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.compact-success strong {
+  font-size: 13px;
+}
+
+.compact-success span {
+  font-size: 12px;
+  color: #476255;
+}
+
+.result-action-card {
+  padding: 20px 24px;
+}
+
+.recommended-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.recommended-summary > div:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recommended-summary .mini-label {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: #69758a;
+}
+
+.recommended-summary strong {
+  font-size: 22px;
+  color: #172033;
+}
+
+.recommended-summary small {
+  color: #69758a;
+  font-size: 12px;
+}
+
+.export-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.export-button {
+  border: 1px solid #d4dfef;
+  background: #f7f9fd;
+  color: #17345f;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.export-button:hover {
+  background: #eaf1ff;
+  border-color: #b8cef2;
+}
+
+@media (max-width: 700px) {
+  .recommended-summary {
+    align-items: stretch;
+  }
+
+  .export-actions {
+    justify-content: flex-start;
+  }
+}
