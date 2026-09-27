@@ -1,0 +1,100 @@
+PUBLISH-READY RCSPPSUITE EXTENSION - BEGINNER GUIDE
+===================================================
+
+WHAT THIS VERSION ADDS
+----------------------
+1. Keeps your existing Demo/Small/Medium/Large and Custom CSV workflow.
+2. Adds three public-benchmark-derived choices to the web app:
+   - RCSPPSuite Small  -> source instance s_01 -> 84 containers / 80 adapted positions
+   - RCSPPSuite Medium -> source instance m_01 -> 176 containers / 160 adapted positions
+   - RCSPPSuite Large  -> source instance l_01 -> 460 containers / 400 adapted positions
+3. Bundles the exact source XML instances and vessel profiles used.
+4. Adds datasets/rcspp_adapter.py so the derived CSVs can be regenerated exactly.
+5. Adds manifest.json for each benchmark containing source IDs, random seed, field mappings and limitations.
+6. Fixes utilization reporting so it uses unique occupied slots and cannot legitimately exceed 100%.
+7. Adds research/run_rcspp_benchmark.py for repeated experiments with explicit random seeds.
+8. Adds research/RCSPP_BENCHMARK_PROTOCOL.md and research/DATASET_CITATION.md.
+9. Keeps CSV/Excel/Word/PDF/JSON/ZIP result exports and includes benchmark provenance in reports.
+
+IMPORTANT CLAIM TO USE
+----------------------
+Say:
+"We evaluated the framework using controlled synthetic scenarios and reproducible reduced benchmark instances derived from RCSPPSuite. The RCSPP source cargo and vessel-position attributes supported by our model are preserved, while advanced hydrostatic, ballast, lashing, crane and full multi-port arrival-condition constraints remain future work."
+
+Do NOT say:
+"We solve the complete RCSPP formulation."
+
+HOW TO RUN LOCALLY
+------------------
+1. Extract the project.
+2. Open the project root in VS Code.
+3. Backend terminal:
+
+   py -m venv .venv
+   .venv\Scripts\activate
+   pip install -r requirements.txt
+   uvicorn backend.main:app --reload --host 127.0.0.1 --port 8000
+
+4. Frontend terminal:
+
+   cd frontend
+   npm install
+   npm run dev
+
+5. Open the Vite URL (usually http://localhost:5173).
+6. In Dataset, choose "RCSPPSuite Small" first.
+7. Select Greedy, Priority Greedy and Best Fit for a quick check.
+8. Run Optimization.
+9. Then use all algorithms for the final experiment if time permits.
+
+REGENERATE THE RCSPP-DERIVED DATA
+----------------------------------
+From project root:
+
+   python datasets/rcspp_adapter.py
+
+The output is deterministic. The same source XML + same seed creates the same derived CSVs.
+
+RUN A REPRODUCIBLE PAPER EXPERIMENT
+-----------------------------------
+Quick:
+
+   python research/run_rcspp_benchmark.py --dataset rcspp_small --repeats 5
+
+All three:
+
+   python research/run_rcspp_benchmark.py --dataset all --repeats 5
+
+Results are generated in research/results/.
+
+HOW TO UPDATE YOUR EXISTING GITHUB REPO
+---------------------------------------
+1. KEEP the hidden .git folder in your current repo folder.
+2. Replace the old project files with the files from this new project.
+3. Do not copy venv/.venv or frontend/node_modules.
+4. Run:
+
+   git status
+   git add -A
+   git commit -m "Add reproducible RCSPPSuite benchmark evaluation"
+   git push
+
+Render/Vercel should redeploy from GitHub automatically if your deployments are already connected.
+
+WHAT TO SHOW YOUR MENTOR
+------------------------
+1. Live project URL.
+2. Dataset dropdown showing RCSPPSuite Small/Medium/Large.
+3. RCSPPSuite Small optimization result.
+4. Algorithm comparison.
+5. Recommended plan.
+6. PDF/Excel export.
+7. GitHub folders:
+   datasets/rcspp/source/
+   datasets/rcspp/generated/
+   datasets/rcspp_adapter.py
+   research/RCSPP_BENCHMARK_PROTOCOL.md
+
+WHY THIS IS STRONGER FOR A PAPER
+--------------------------------
+Your research is no longer based only on project-generated synthetic data. The repository includes a public-benchmark-derived, reproducible evaluation layer and explicitly documents the adaptation instead of claiming unsupported full-vessel physics.

@@ -31,3 +31,7 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Reproducible benchmark outputs (regenerate locally)
+research/results/*.csv
+!research/results/.gitkeep

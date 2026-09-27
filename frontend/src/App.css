@@ -1410,3 +1410,12 @@ footer {
     justify-content: flex-start;
   }
 }
+
+/* RCSPPSuite benchmark provenance */
+.dataset-info .benchmark-source {
+  margin-top: 3px;
+  padding-top: 7px;
+  border-top: 1px solid #dfe6f0;
+  color: #44516a;
+  font-size: 11px;
+}

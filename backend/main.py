@@ -49,11 +49,13 @@ from backend.exporter import create_exports
 DATASET_DIR = PROJECT_ROOT / "datasets"
 GENERATED_DIR = DATASET_DIR / "generated"
 CUSTOM_DIR = DATASET_DIR / "custom"
+RCSPP_GENERATED_DIR = DATASET_DIR / "rcspp" / "generated"
 
 RESULT_DIR = PROJECT_ROOT / "experiments" / "results"
 
 GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 CUSTOM_DIR.mkdir(parents=True, exist_ok=True)
+RCSPP_GENERATED_DIR.mkdir(parents=True, exist_ok=True)
 RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
 
@@ -146,6 +148,39 @@ DATASETS = {
         "containers": GENERATED_DIR / "large" / "containers.csv",
         "slots": GENERATED_DIR / "large" / "slots.csv",
     },
+    "rcspp_small": {
+        "name": "RCSPPSuite Small",
+        "description": "Public benchmark-derived scenario (adapted s_01)",
+        "scenario": "RCSPPSuite reduced single-stage benchmark",
+        "route": "Source voyage port codes from RCSPPSuite s_01",
+        "source": "RCSPPSuite / s_01",
+        "benchmark": True,
+        "containers": RCSPP_GENERATED_DIR / "rcspp_small" / "containers.csv",
+        "slots": RCSPP_GENERATED_DIR / "rcspp_small" / "slots.csv",
+        "manifest": RCSPP_GENERATED_DIR / "rcspp_small" / "manifest.json",
+    },
+    "rcspp_medium": {
+        "name": "RCSPPSuite Medium",
+        "description": "Public benchmark-derived scenario (adapted m_01)",
+        "scenario": "RCSPPSuite reduced single-stage benchmark",
+        "route": "Source voyage port codes from RCSPPSuite m_01",
+        "source": "RCSPPSuite / m_01",
+        "benchmark": True,
+        "containers": RCSPP_GENERATED_DIR / "rcspp_medium" / "containers.csv",
+        "slots": RCSPP_GENERATED_DIR / "rcspp_medium" / "slots.csv",
+        "manifest": RCSPP_GENERATED_DIR / "rcspp_medium" / "manifest.json",
+    },
+    "rcspp_large": {
+        "name": "RCSPPSuite Large",
+        "description": "Public benchmark-derived scenario (adapted l_01)",
+        "scenario": "RCSPPSuite reduced single-stage benchmark",
+        "route": "Source voyage port codes from RCSPPSuite l_01",
+        "source": "RCSPPSuite / l_01",
+        "benchmark": True,
+        "containers": RCSPP_GENERATED_DIR / "rcspp_large" / "containers.csv",
+        "slots": RCSPP_GENERATED_DIR / "rcspp_large" / "slots.csv",
+        "manifest": RCSPP_GENERATED_DIR / "rcspp_large" / "manifest.json",
+    },
     "custom": {
         "name": "Custom",
         "description": "User uploaded dataset",
@@ -228,6 +263,19 @@ def remove_custom_dataset():
                 file.unlink()
         except Exception:
             pass
+
+
+def load_manifest(config):
+    manifest_path = config.get("manifest")
+    if not manifest_path:
+        return None
+    try:
+        path = Path(manifest_path)
+        if path.exists():
+            return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        pass
+    return None
 
 
 def load_dataset(dataset_name: str):
@@ -337,6 +385,9 @@ def get_datasets():
         "small",
         "medium",
         "large",
+        "rcspp_small",
+        "rcspp_medium",
+        "rcspp_large",
     ]:
 
         config = DATASETS[key]
@@ -364,12 +415,17 @@ def get_datasets():
                     slots
                 )
 
+                manifest = load_manifest(config)
                 response.append({
                     "id": key,
                     "name": config["name"],
                     "description": config["description"],
                     "scenario": config.get("scenario", ""),
                     "route": config.get("route", ""),
+                    "source": config.get("source", "Synthetic academic dataset"),
+                    "benchmark": bool(config.get("benchmark", False)),
+                    "benchmark_mode": manifest.get("adaptation", {}).get("mode") if manifest else None,
+                    "source_instance": manifest.get("source_instance") if manifest else None,
                     "containers": len(containers),
                     "slots": len(slots),
                     "demand_ratio": round(len(containers) / len(slots), 3) if len(slots) else None,
@@ -482,10 +538,15 @@ def get_dataset(dataset_name: str):
 
     config = DATASETS[dataset_name]
 
+    manifest = load_manifest(config)
+
     return {
         "dataset": dataset_name,
         "scenario": config.get("scenario", ""),
         "route": config.get("route", ""),
+        "source": config.get("source", "Synthetic academic dataset"),
+        "benchmark": bool(config.get("benchmark", False)),
+        "manifest": manifest,
         "containers": len(containers),
         "slots": len(slots),
 
@@ -818,9 +879,14 @@ def optimize(
 
     total_runtime = time.perf_counter() - started_all
     config = DATASETS[request.dataset]
+    manifest = load_manifest(config)
     scenario = {
         "scenario": config.get("scenario", ""),
         "route": config.get("route", ""),
+        "source": config.get("source", "Synthetic academic dataset"),
+        "benchmark": bool(config.get("benchmark", False)),
+        "source_instance": manifest.get("source_instance") if manifest else None,
+        "benchmark_mode": manifest.get("adaptation", {}).get("mode") if manifest else None,
     }
 
     export_files_abs, recommended_algorithm, export_errors = create_exports(

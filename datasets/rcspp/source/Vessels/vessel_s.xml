@@ -1,0 +1,779 @@
+<?xml version="1.0"?>
+<Vessel>
+	<VesselData IMO="0000001" LOA="152.570" LPP="142.370" LBeg="-3.590" GMLimit="0.775" MaxDispl="18700" LashLim="410" />
+	<HydrostaticsTable Trim="0" Data="Displ,LCB,KMT,TRF">
+		<Values>3675.273825,71.000000,17.990000,0.310000</Values>
+		<Values>3715.354400,71.000000,17.900000,0.310000</Values>
+		<Values>3754.636500,71.000000,17.799999,0.310000</Values>
+		<Values>3794.914900,71.010002,17.709999,0.310000</Values>
+		<Values>3835.293750,71.010002,17.620001,0.320000</Values>
+		<Values>3875.773050,71.019997,17.530001,0.320000</Values>
+		<Values>3916.350750,71.029999,17.440001,0.320000</Values>
+		<Values>3957.028900,71.040001,17.350000,0.320000</Values>
+		<Values>3997.707050,71.050003,17.270000,0.320000</Values>
+		<Values>4038.584050,71.059998,17.180000,0.330000</Values>
+		<Values>4079.462075,71.070000,17.100000,0.330000</Values>
+		<Values>4120.339075,71.080002,17.010000,0.330000</Values>
+		<Values>4161.316525,71.080002,16.930000,0.330000</Values>
+		<Values>4202.392375,71.089996,16.850000,0.340000</Values>
+		<Values>4243.469250,71.099998,16.770000,0.340000</Values>
+		<Values>4284.645550,71.099998,16.690001,0.340000</Values>
+		<Values>4325.822875,71.110001,16.610001,0.340000</Values>
+		<Values>4366.999175,71.120003,16.540001,0.340000</Values>
+		<Values>4408.375350,71.120003,16.459999,0.340000</Values>
+		<Values>4449.950375,71.129997,16.389999,0.350000</Values>
+		<Values>4491.525400,71.139999,16.309999,0.350000</Values>
+		<Values>4533.100425,71.150002,16.240000,0.350000</Values>
+		<Values>4574.875325,71.150002,16.170000,0.350000</Values>
+		<Values>4616.650225,71.160004,16.100000,0.360000</Values>
+		<Values>4658.425125,71.169998,16.030001,0.360000</Values>
+		<Values>4700.299450,71.169998,15.960000,0.360000</Values>
+		<Values>4742.273200,71.180000,15.890000,0.360000</Values>
+		<Values>4784.347400,71.190002,15.820000,0.370000</Values>
+		<Values>4826.420575,71.190002,15.750000,0.370000</Values>
+		<Values>4868.594200,71.199997,15.690000,0.370000</Values>
+		<Values>4910.767825,71.209999,15.620000,0.370000</Values>
+		<Values>4953.040875,71.220001,15.550000,0.370000</Values>
+		<Values>4995.413350,71.220001,15.490000,0.380000</Values>
+		<Values>5037.786850,71.230003,15.430000,0.380000</Values>
+		<Values>5080.258750,71.230003,15.360000,0.380000</Values>
+		<Values>5122.731675,71.239998,15.300000,0.380000</Values>
+		<Values>5165.304025,71.250000,15.240000,0.390000</Values>
+		<Values>5207.975800,71.250000,15.180000,0.390000</Values>
+		<Values>5250.647575,71.260002,15.120000,0.390000</Values>
+		<Values>5293.419800,71.269997,15.060000,0.390000</Values>
+		<Values>5336.291450,71.269997,15.000000,0.390000</Values>
+		<Values>5379.062650,71.279999,14.940000,0.400000</Values>
+		<Values>5422.033725,71.290001,14.890000,0.400000</Values>
+		<Values>5465.004800,71.290001,14.830000,0.400000</Values>
+		<Values>5508.075300,71.300003,14.770000,0.400000</Values>
+		<Values>5551.146825,71.300003,14.710000,0.410000</Values>
+		<Values>5594.316750,71.309998,14.660000,0.410000</Values>
+		<Values>5637.487700,71.309998,14.600000,0.410000</Values>
+		<Values>5680.758075,71.320000,14.550000,0.410000</Values>
+		<Values>5724.127875,71.330002,14.500000,0.410000</Values>
+		<Values>5767.497675,71.330002,14.450000,0.420000</Values>
+		<Values>5810.867475,71.339996,14.400000,0.420000</Values>
+		<Values>5854.437150,71.339996,14.350000,0.420000</Values>
+		<Values>5897.906375,71.349998,14.300000,0.420000</Values>
+		<Values>5941.575475,71.349998,14.250000,0.430000</Values>
+		<Values>5985.144125,71.360001,14.200000,0.430000</Values>
+		<Values>6028.913675,71.360001,14.150000,0.430000</Values>
+		<Values>6072.781625,71.370003,14.300000,0.420000</Values>
+		<Values>6117.248175,71.370003,14.260000,0.420000</Values>
+		<Values>6161.814150,71.370003,14.210000,0.420000</Values>
+		<Values>6206.381150,71.370003,14.170000,0.420000</Values>
+		<Values>6251.046550,71.370003,14.120000,0.430000</Values>
+		<Values>6295.911825,71.370003,14.080000,0.430000</Values>
+		<Values>6340.677675,71.370003,14.040000,0.430000</Values>
+		<Values>6385.542950,71.370003,14.000000,0.430000</Values>
+		<Values>6430.409250,71.370003,13.950000,0.430000</Values>
+		<Values>6475.373950,71.370003,13.910000,0.440000</Values>
+		<Values>6520.439100,71.370003,13.870000,0.440000</Values>
+		<Values>6565.503225,71.370003,13.830000,0.440000</Values>
+		<Values>6610.667800,71.370003,13.790000,0.440000</Values>
+		<Values>6655.832375,71.370003,13.750000,0.440000</Values>
+		<Values>6701.096375,71.370003,13.720000,0.450000</Values>
+		<Values>6746.460825,71.360001,13.680000,0.450000</Values>
+		<Values>6791.824250,71.360001,13.640000,0.450000</Values>
+		<Values>6837.288125,71.360001,13.600000,0.450000</Values>
+		<Values>6882.752000,71.360001,13.570000,0.450000</Values>
+		<Values>6928.315300,71.360001,13.530000,0.450000</Values>
+		<Values>6973.878600,71.360001,13.500000,0.460000</Values>
+		<Values>7019.640750,71.360001,13.460000,0.460000</Values>
+		<Values>7065.304500,71.360001,13.430000,0.460000</Values>
+		<Values>7111.166075,71.360001,13.390000,0.460000</Values>
+		<Values>7157.028675,71.349998,13.360000,0.460000</Values>
+		<Values>7202.891275,71.349998,13.320000,0.460000</Values>
+		<Values>7248.853300,71.349998,13.290000,0.470000</Values>
+		<Values>7294.914750,71.349998,13.260000,0.470000</Values>
+		<Values>7341.076650,71.349998,13.230000,0.470000</Values>
+		<Values>7387.238550,71.349998,13.200000,0.470000</Values>
+		<Values>7433.499875,71.339996,13.170000,0.470000</Values>
+		<Values>7479.860625,71.339996,13.130000,0.470000</Values>
+		<Values>7526.221375,71.339996,13.100000,0.480000</Values>
+		<Values>7572.582125,71.339996,13.070000,0.480000</Values>
+		<Values>7619.142750,71.330002,13.040000,0.480000</Values>
+		<Values>7665.602925,71.330002,13.010000,0.480000</Values>
+		<Values>7712.262975,71.330002,12.980000,0.480000</Values>
+		<Values>7758.923025,71.330002,12.950000,0.480000</Values>
+		<Values>7805.583075,71.320000,12.920000,0.490000</Values>
+		<Values>7852.443000,71.320000,12.900000,0.490000</Values>
+		<Values>7899.202475,71.320000,12.870000,0.490000</Values>
+		<Values>7946.161825,71.309998,12.840000,0.490000</Values>
+		<Values>7993.120150,71.309998,12.810000,0.490000</Values>
+		<Values>8040.079500,71.309998,12.790000,0.490000</Values>
+		<Values>8087.238725,71.300003,12.760000,0.490000</Values>
+		<Values>8134.297500,71.300003,12.740000,0.500000</Values>
+		<Values>8181.555125,71.300003,12.710000,0.500000</Values>
+		<Values>8228.813775,71.290001,12.690000,0.500000</Values>
+		<Values>8276.171850,71.290001,12.660000,0.500000</Values>
+		<Values>8323.528900,71.290001,12.640000,0.500000</Values>
+		<Values>8370.987425,71.279999,12.610000,0.500000</Values>
+		<Values>8418.444925,71.279999,12.590000,0.510000</Values>
+		<Values>8466.001850,71.269997,12.560000,0.510000</Values>
+		<Values>8513.559800,71.269997,12.540000,0.510000</Values>
+		<Values>8561.216150,71.269997,12.520000,0.510000</Values>
+		<Values>8608.972950,71.260002,12.490000,0.510000</Values>
+		<Values>8656.729750,71.260002,12.470000,0.510000</Values>
+		<Values>8704.585975,71.250000,12.450000,0.510000</Values>
+		<Values>8752.442200,71.250000,12.420000,0.520000</Values>
+		<Values>8800.398875,71.239998,12.400000,0.520000</Values>
+		<Values>8848.454975,71.239998,12.380000,0.520000</Values>
+		<Values>8896.410625,71.230003,12.360000,0.520000</Values>
+		<Values>8944.566150,71.230003,12.330000,0.520000</Values>
+		<Values>8992.721675,71.230003,12.310000,0.520000</Values>
+		<Values>9040.976625,71.220001,12.290000,0.520000</Values>
+		<Values>9089.232600,71.220001,12.270000,0.530000</Values>
+		<Values>9137.586975,71.209999,12.250000,0.530000</Values>
+		<Values>9185.942375,71.209999,12.230000,0.530000</Values>
+		<Values>9234.397200,71.199997,12.210000,0.530000</Values>
+		<Values>9282.951450,71.190002,12.190000,0.530000</Values>
+		<Values>9331.505700,71.190002,12.170000,0.530000</Values>
+		<Values>9380.059950,71.180000,12.150000,0.530000</Values>
+		<Values>9428.713625,71.180000,12.130000,0.540000</Values>
+		<Values>9477.467750,71.169998,12.110000,0.540000</Values>
+		<Values>9526.321300,71.169998,12.090000,0.540000</Values>
+		<Values>9575.174850,71.160004,12.080000,0.540000</Values>
+		<Values>9624.028400,71.160004,12.060000,0.540000</Values>
+		<Values>9672.981375,71.150002,12.040000,0.540000</Values>
+		<Values>9722.033775,71.139999,12.020000,0.540000</Values>
+		<Values>9771.087200,71.139999,12.010000,0.550000</Values>
+		<Values>9820.239025,71.129997,11.990000,0.550000</Values>
+		<Values>9869.391875,71.120003,11.970000,0.550000</Values>
+		<Values>9918.644150,71.120003,11.950000,0.550000</Values>
+		<Values>9967.995850,71.110001,11.940000,0.550000</Values>
+		<Values>10017.347550,71.099998,11.920000,0.550000</Values>
+		<Values>10066.799700,71.099998,11.900000,0.550000</Values>
+		<Values>10116.250825,71.089996,11.890000,0.550000</Values>
+		<Values>10165.802400,71.080002,11.870000,0.550000</Values>
+		<Values>10215.353975,71.080002,11.860000,0.560000</Values>
+		<Values>10265.104400,71.070000,11.840000,0.560000</Values>
+		<Values>10314.755400,71.059998,11.830000,0.560000</Values>
+		<Values>10364.606275,71.059998,11.810000,0.560000</Values>
+		<Values>10414.356700,71.050003,11.800000,0.560000</Values>
+		<Values>10464.307000,71.040001,11.780000,0.560000</Values>
+		<Values>10514.257300,71.029999,11.770000,0.560000</Values>
+		<Values>10564.307025,71.029999,11.760000,0.560000</Values>
+		<Values>10614.356750,71.019997,11.740000,0.560000</Values>
+		<Values>10664.506925,71.010002,11.730000,0.570000</Values>
+		<Values>10714.755500,71.000000,11.710000,0.570000</Values>
+		<Values>10765.005100,70.989998,11.700000,0.570000</Values>
+		<Values>10815.254700,70.989998,11.690000,0.570000</Values>
+		<Values>10865.703150,70.980003,11.670000,0.570000</Values>
+		<Values>10916.151600,70.970001,11.660000,0.570000</Values>
+		<Values>10966.600050,70.959999,11.650000,0.570000</Values>
+		<Values>11017.148950,70.949997,11.640000,0.570000</Values>
+		<Values>11067.796250,70.940002,11.620000,0.570000</Values>
+		<Values>11118.444575,70.940002,11.610000,0.580000</Values>
+		<Values>11169.192325,70.930000,11.600000,0.580000</Values>
+		<Values>11220.039500,70.919998,11.590000,0.580000</Values>
+		<Values>11270.887700,70.910004,11.580000,0.580000</Values>
+		<Values>11321.834300,70.900002,11.560000,0.580000</Values>
+		<Values>11372.781925,70.889999,11.550000,0.580000</Values>
+		<Values>11423.828975,70.879997,11.540000,0.580000</Values>
+		<Values>11474.875000,70.870003,11.530000,0.580000</Values>
+		<Values>11526.021475,70.860001,11.520000,0.580000</Values>
+		<Values>11577.268400,70.849998,11.510000,0.580000</Values>
+		<Values>11628.613725,70.839996,11.500000,0.580000</Values>
+		<Values>11679.960075,70.830002,11.490000,0.580000</Values>
+		<Values>11731.405850,70.820000,11.480000,0.590000</Values>
+		<Values>11782.851625,70.809998,11.470000,0.590000</Values>
+		<Values>11834.396825,70.800003,11.460000,0.590000</Values>
+		<Values>11886.041450,70.790001,11.450000,0.590000</Values>
+		<Values>11937.687100,70.779999,11.440000,0.590000</Values>
+		<Values>11989.432175,70.769997,11.430000,0.590000</Values>
+		<Values>12041.276675,70.760002,11.420000,0.590000</Values>
+		<Values>12093.120150,70.750000,11.410000,0.590000</Values>
+		<Values>12145.065100,70.739998,11.400000,0.590000</Values>
+		<Values>12197.009025,70.730003,11.390000,0.590000</Values>
+		<Values>12249.052375,70.720001,11.380000,0.590000</Values>
+		<Values>12301.196175,70.709999,11.370000,0.590000</Values>
+		<Values>12353.339975,70.699997,11.360000,0.600000</Values>
+		<Values>12405.583200,70.680000,11.350000,0.600000</Values>
+		<Values>12457.925850,70.669998,11.340000,0.600000</Values>
+		<Values>12510.269525,70.660004,11.340000,0.600000</Values>
+		<Values>12562.711600,70.650002,11.330000,0.600000</Values>
+		<Values>12615.154700,70.639999,11.320000,0.600000</Values>
+		<Values>12667.796650,70.629997,11.310000,0.600000</Values>
+		<Values>12720.339175,70.610001,11.300000,0.600000</Values>
+		<Values>12773.080550,70.599998,11.300000,0.600000</Values>
+		<Values>12825.822950,70.589996,11.290000,0.600000</Values>
+		<Values>12878.663750,70.580002,11.280000,0.600000</Values>
+		<Values>12931.505575,70.559998,11.270000,0.600000</Values>
+		<Values>12984.446825,70.550003,11.270000,0.600000</Values>
+		<Values>13037.487500,70.540001,11.260000,0.600000</Values>
+		<Values>13090.528175,70.529999,11.250000,0.600000</Values>
+		<Values>13143.669300,70.510002,11.240000,0.610000</Values>
+		<Values>13196.908825,70.500000,11.240000,0.610000</Values>
+		<Values>13250.149375,70.489998,11.230000,0.610000</Values>
+		<Values>13303.489350,70.470001,11.220000,0.610000</Values>
+		<Values>13356.928750,70.459999,11.220000,0.610000</Values>
+		<Values>13410.369175,70.449997,11.210000,0.610000</Values>
+		<Values>13463.908000,70.430000,11.200000,0.610000</Values>
+		<Values>13517.547275,70.419998,11.200000,0.610000</Values>
+		<Values>13571.285975,70.410004,11.190000,0.610000</Values>
+		<Values>13625.024675,70.389999,11.180000,0.610000</Values>
+		<Values>13678.863825,70.379997,11.180000,0.610000</Values>
+		<Values>13732.701950,70.370003,11.170000,0.610000</Values>
+		<Values>13786.640525,70.349998,11.170000,0.610000</Values>
+		<Values>13840.677500,70.339996,11.160000,0.610000</Values>
+		<Values>13894.815950,70.320000,11.160000,0.610000</Values>
+		<Values>13948.953375,70.309998,11.150000,0.610000</Values>
+		<Values>14003.190225,70.290001,11.150000,0.610000</Values>
+		<Values>14057.128800,70.279999,11.140000,0.610000</Values>
+		<Values>14111.565525,70.260002,11.130000,0.610000</Values>
+		<Values>14166.002250,70.250000,11.130000,0.610000</Values>
+		<Values>14220.538400,70.230003,11.120000,0.620000</Values>
+		<Values>14275.074550,70.220001,11.120000,0.620000</Values>
+		<Values>14329.711150,70.199997,11.110000,0.620000</Values>
+		<Values>14384.446150,70.190002,11.110000,0.620000</Values>
+		<Values>14439.182175,70.169998,11.110000,0.620000</Values>
+		<Values>14494.017625,70.160004,11.100000,0.620000</Values>
+		<Values>14548.953525,70.139999,11.100000,0.620000</Values>
+		<Values>14603.888400,70.129997,11.090000,0.620000</Values>
+		<Values>14658.923725,70.110001,11.090000,0.620000</Values>
+		<Values>14714.057450,70.089996,11.080000,0.620000</Values>
+		<Values>14769.192200,70.080002,11.080000,0.620000</Values>
+		<Values>14824.426375,70.059998,11.080000,0.620000</Values>
+		<Values>14879.761000,70.040001,11.070000,0.620000</Values>
+		<Values>14935.094600,70.029999,11.070000,0.620000</Values>
+		<Values>14990.528650,70.010002,11.060000,0.620000</Values>
+		<Values>15046.062125,69.989998,11.060000,0.620000</Values>
+		<Values>15101.595600,69.980003,11.060000,0.620000</Values>
+		<Values>15157.228500,69.959999,11.050000,0.620000</Values>
+		<Values>15212.960825,69.940002,11.050000,0.620000</Values>
+		<Values>15268.793600,69.930000,11.050000,0.620000</Values>
+		<Values>15324.626375,69.910004,11.040000,0.620000</Values>
+		<Values>15380.558575,69.889999,11.040000,0.620000</Values>
+		<Values>15436.490775,69.870003,11.040000,0.620000</Values>
+		<Values>15492.522400,69.860001,11.030000,0.620000</Values>
+		<Values>15548.654475,69.839996,11.030000,0.630000</Values>
+		<Values>15604.785525,69.820000,11.030000,0.630000</Values>
+		<Values>15661.017025,69.800003,11.020000,0.630000</Values>
+		<Values>15717.347950,69.779999,11.020000,0.630000</Values>
+		<Values>15773.678875,69.760002,11.020000,0.630000</Values>
+		<Values>15830.109225,69.750000,11.020000,0.630000</Values>
+		<Values>15886.640025,69.730003,11.010000,0.630000</Values>
+		<Values>15943.170825,69.709999,11.010000,0.630000</Values>
+		<Values>15999.801050,69.690002,11.010000,0.630000</Values>
+		<Values>16056.530700,69.669998,11.010000,0.630000</Values>
+		<Values>16113.260350,69.650002,11.000000,0.630000</Values>
+		<Values>16170.089425,69.639999,11.000000,0.630000</Values>
+		<Values>16227.018950,69.620003,11.000000,0.630000</Values>
+		<Values>16283.948475,69.599998,11.000000,0.630000</Values>
+		<Values>16340.977425,69.580002,11.000000,0.630000</Values>
+		<Values>16398.006375,69.559998,10.990000,0.630000</Values>
+		<Values>16455.134750,69.540001,10.990000,0.630000</Values>
+		<Values>16512.362550,69.519997,10.990000,0.630000</Values>
+		<Values>16569.591375,69.500000,10.990000,0.630000</Values>
+		<Values>16627.019050,69.480003,10.990000,0.630000</Values>
+		<Values>16684.446725,69.459999,10.990000,0.630000</Values>
+		<Values>16741.973825,69.440002,10.980000,0.640000</Values>
+		<Values>16799.501950,69.419998,10.980000,0.640000</Values>
+		<Values>16857.128475,69.400002,10.980000,0.640000</Values>
+		<Values>16914.855450,69.379997,10.980000,0.640000</Values>
+		<Values>16972.681850,69.360001,10.980000,0.640000</Values>
+		<Values>17030.508250,69.339996,10.980000,0.640000</Values>
+		<Values>17088.435100,69.320000,10.980000,0.640000</Values>
+		<Values>17146.360925,69.300003,10.980000,0.640000</Values>
+		<Values>17204.486625,69.279999,10.970000,0.640000</Values>
+		<Values>17262.612325,69.260002,10.970000,0.640000</Values>
+		<Values>17320.837450,69.239998,10.970000,0.640000</Values>
+		<Values>17379.062575,69.220001,10.970000,0.640000</Values>
+		<Values>17437.388150,69.199997,10.970000,0.640000</Values>
+		<Values>17495.613275,69.180000,10.970000,0.640000</Values>
+		<Values>17553.937825,69.160004,10.970000,0.640000</Values>
+		<Values>17612.462250,69.139999,10.970000,0.640000</Values>
+		<Values>17670.887250,69.120003,10.970000,0.640000</Values>
+		<Values>17729.411675,69.099998,10.970000,0.640000</Values>
+		<Values>17788.035525,69.070000,10.970000,0.640000</Values>
+		<Values>17846.660400,69.050003,10.970000,0.640000</Values>
+		<Values>17905.383675,69.029999,10.970000,0.650000</Values>
+		<Values>17964.107975,69.010002,10.970000,0.650000</Values>
+		<Values>18022.931700,68.989998,10.970000,0.650000</Values>
+		<Values>18081.854850,68.970001,10.970000,0.650000</Values>
+		<Values>18140.778000,68.949997,10.970000,0.650000</Values>
+		<Values>18199.800575,68.930000,10.960000,0.650000</Values>
+		<Values>18258.823150,68.910004,10.960000,0.650000</Values>
+		<Values>18317.846750,68.889999,10.960000,0.650000</Values>
+		<Values>18377.069200,68.870003,10.960000,0.650000</Values>
+	</HydrostaticsTable>
+	<Bays>
+		<Bay Name="0">
+			<BayInfo LpMin="133.231" LpMax="148.970" />
+			<LightShipMass Weight="342.512" VP="10.401" />
+			<Tanks>
+				<Tank Name="Tank B0" MaxVolume="233.770" VpEmpty="0.030" VpFull="5.110" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,0.000</Values>
+				<Values>4284.65,0.000</Values>
+				<Values>4805.38,2.361</Values>
+				<Values>5336.29,6.610</Values>
+				<Values>5876.17,12.434</Values>
+				<Values>6430.41,19.516</Values>
+				<Values>6996.76,27.701</Values>
+				<Values>7572.58,36.672</Values>
+				<Values>8157.93,46.587</Values>
+				<Values>8752.44,57.290</Values>
+				<Values>9355.78,68.465</Values>
+				<Values>9968.00,80.426</Values>
+				<Values>10589.33,92.703</Values>
+				<Values>11220.04,105.609</Values>
+				<Values>11860.22,118.829</Values>
+				<Values>12510.27,132.208</Values>
+				<Values>13170.29,145.743</Values>
+				<Values>13840.68,159.121</Values>
+				<Values>14521.49,172.342</Values>
+				<Values>15212.96,184.776</Values>
+				<Values>15914.91,196.265</Values>
+				<Values>16627.02,206.181</Values>
+				<Values>17349.95,212.949</Values>
+				<Values>18081.85,213.421</Values>
+			</BonjeanData>
+			<Stacks />
+		</Bay>
+		<Bay Name="2">
+			<BayInfo LpMin="120.277" LpMax="133.231" />
+			<LightShipMass Weight="258.464" VP="8.063" />
+			<Tanks>
+				<Tank Name="Tank B2" MaxVolume="230.672" VpEmpty="0.030" VpFull="2.340" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,73.385</Values>
+				<Values>4284.65,86.356</Values>
+				<Values>4805.38,100.052</Values>
+				<Values>5336.29,114.163</Values>
+				<Values>5876.17,128.895</Values>
+				<Values>6430.41,143.913</Values>
+				<Values>6996.76,159.422</Values>
+				<Values>7572.58,175.217</Values>
+				<Values>8157.93,191.141</Values>
+				<Values>8752.44,207.325</Values>
+				<Values>9355.78,223.638</Values>
+				<Values>9968.00,240.080</Values>
+				<Values>10589.33,256.600</Values>
+				<Values>11220.04,273.120</Values>
+				<Values>11860.22,289.561</Values>
+				<Values>12510.27,306.054</Values>
+				<Values>13170.29,323.010</Values>
+				<Values>13840.68,340.326</Values>
+				<Values>14521.49,358.002</Values>
+				<Values>15212.96,375.853</Values>
+				<Values>15914.91,394.143</Values>
+				<Values>16627.02,413.260</Values>
+				<Values>17349.95,433.232</Values>
+				<Values>18081.85,453.955</Values>
+				<Values>18377.07,475.766</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="0" Row="8" Tp="-10.053" VpMin="16.983" StartTier="88" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="10.494" BlockId="0" />
+				<Stack Index="1" Row="6" Tp="-7.529" VpMin="16.983" StartTier="88" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="10.494" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="2" Row="4" Tp="-5.005" VpMin="11.771" StartTier="84" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="15.706" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="3" Row="2" Tp="-2.481" VpMin="11.771" StartTier="84" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="15.706" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="4" Row="1" Tp="0.043" VpMin="11.771" StartTier="84" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="15.706" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="5" Row="3" Tp="2.567" VpMin="11.771" StartTier="84" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="15.706" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="6" Row="5" Tp="5.091" VpMin="16.983" StartTier="88" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="10.494" ReeferPositions="84;86" BlockId="0" />
+				<Stack Index="7" Row="7" Tp="7.615" VpMin="16.983" StartTier="88" EndTier="92" Level="OnDeck" MaxWeight="135.000" MaxHeight="10.494" BlockId="0" />
+			</Stacks>
+		</Bay>
+		<Bay Name="6">
+			<BayInfo LpMin="105.355" LpMax="120.277" />
+			<LightShipMass Weight="444.432" VP="8.073" />
+			<Tanks>
+				<Tank Name="Tank B6" MaxVolume="842.157" VpEmpty="0.775" VpFull="3.460" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,193.586</Values>
+				<Values>4284.65,225.542</Values>
+				<Values>4805.38,258.715</Values>
+				<Values>5336.29,293.173</Values>
+				<Values>5876.17,328.838</Values>
+				<Values>6430.41,365.490</Values>
+				<Values>6996.76,403.198</Values>
+				<Values>7572.58,441.894</Values>
+				<Values>8157.93,481.496</Values>
+				<Values>8752.44,522.006</Values>
+				<Values>9355.78,563.492</Values>
+				<Values>9968.00,605.816</Values>
+				<Values>10589.33,649.104</Values>
+				<Values>11220.04,693.368</Values>
+				<Values>11860.22,738.527</Values>
+				<Values>12510.27,784.662</Values>
+				<Values>13170.29,831.842</Values>
+				<Values>13840.68,879.917</Values>
+				<Values>14521.49,929.036</Values>
+				<Values>15212.96,979.119</Values>
+				<Values>15914.91,1030.328</Values>
+				<Values>16627.02,1082.500</Values>
+				<Values>17349.95,1135.786</Values>
+				<Values>18081.85,1190.185</Values>
+				<Values>18377.07,1245.698</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="8" Row="8" Tp="-10.303" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="9" Row="6" Tp="-7.779" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="10" Row="4" Tp="-5.155" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="11" Row="2" Tp="-2.531" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="12" Row="1" Tp="0.093" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="13" Row="3" Tp="2.717" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="14" Row="5" Tp="5.341" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="15" Row="7" Tp="7.865" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="13.086" ReeferPositions="86;88" HatchCoverId="0" BlockId="1" />
+				<Stack Index="16" Row="6" Tp="-7.584" VpMin="9.186" StartTier="8" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="3.810" HatchCoverId="0" BlockId="1" />
+				<Stack Index="17" Row="4" Tp="-5.038" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="0" BlockId="1" />
+				<Stack Index="18" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" HatchCoverId="0" BlockId="1" />
+				<Stack Index="19" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" HatchCoverId="0" BlockId="1" />
+				<Stack Index="20" Row="3" Tp="2.600" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="0" BlockId="1" />
+				<Stack Index="21" Row="5" Tp="5.146" VpMin="9.186" StartTier="8" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="3.810" HatchCoverId="0" BlockId="1" />
+			</Stacks>
+		</Bay>
+		<Bay Name="10">
+			<BayInfo LpMin="92.313" LpMax="105.355" />
+			<LightShipMass Weight="360.088" VP="7.226" />
+			<Tanks>
+				<Tank Name="Tank B10" MaxVolume="703.991" VpEmpty="1.023" VpFull="3.587" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,333.468</Values>
+				<Values>4284.65,382.774</Values>
+				<Values>4805.38,433.586</Values>
+				<Values>5336.29,485.690</Values>
+				<Values>5876.17,539.028</Values>
+				<Values>6430.41,593.539</Values>
+				<Values>6996.76,649.153</Values>
+				<Values>7572.58,705.609</Values>
+				<Values>8157.93,763.096</Values>
+				<Values>8752.44,821.366</Values>
+				<Values>9355.78,880.407</Values>
+				<Values>9968.00,940.230</Values>
+				<Values>10589.33,1000.824</Values>
+				<Values>11220.04,1062.129</Values>
+				<Values>11860.22,1124.087</Values>
+				<Values>12510.27,1186.815</Values>
+				<Values>13170.29,1250.054</Values>
+				<Values>13840.68,1314.003</Values>
+				<Values>14521.49,1378.593</Values>
+				<Values>15212.96,1443.705</Values>
+				<Values>15914.91,1509.517</Values>
+				<Values>16627.02,1575.779</Values>
+				<Values>17349.95,1642.681</Values>
+				<Values>18081.85,1710.093</Values>
+				<Values>18377.07,1778.146</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="22" Row="8" Tp="-11.615" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="23" Row="6" Tp="-9.091" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="24" Row="4" Tp="-6.467" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="25" Row="2" Tp="-3.843" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="26" Row="0" Tp="-1.219" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="27" Row="1" Tp="1.405" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="28" Row="3" Tp="4.029" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="29" Row="5" Tp="6.653" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="30" Row="7" Tp="9.177" VpMin="14.279" StartTier="86" EndTier="92" Level="OnDeck" MaxWeight="150.000" MaxHeight="14.234" ReeferPositions="86;88" HatchCoverId="1" BlockId="2" />
+				<Stack Index="31" Row="8" Tp="-10.130" VpMin="9.186" StartTier="8" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="3.810" ReeferPositions="6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="32" Row="6" Tp="-7.584" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="33" Row="4" Tp="-5.038" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="34" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="35" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="36" Row="3" Tp="2.600" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="37" Row="5" Tp="5.146" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="1" BlockId="2" />
+				<Stack Index="38" Row="7" Tp="7.692" VpMin="9.186" StartTier="8" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="3.810" ReeferPositions="6;8" HatchCoverId="1" BlockId="2" />
+			</Stacks>
+			<BendingMomentLimit SaggingLimit="-63053.971" HoggingLimit="106705.203" />
+		</Bay>
+		<Bay Name="14">
+			<BayInfo LpMin="74.913" LpMax="92.313" />
+			<LightShipMass Weight="1041.378" VP="5.681" />
+			<Tanks>
+				<Tank Name="Tank B14" MaxVolume="539.093" VpEmpty="0.626" VpFull="2.466" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,668.669</Values>
+				<Values>4284.65,755.859</Values>
+				<Values>4805.38,844.285</Values>
+				<Values>5336.29,933.948</Values>
+				<Values>5876.17,1024.551</Values>
+				<Values>6430.41,1116.217</Values>
+				<Values>6996.76,1208.700</Values>
+				<Values>7572.58,1302.073</Values>
+				<Values>8157.93,1396.037</Values>
+				<Values>8752.44,1490.820</Values>
+				<Values>9355.78,1586.194</Values>
+				<Values>9968.00,1682.110</Values>
+				<Values>10589.33,1778.669</Values>
+				<Values>11220.04,1875.525</Values>
+				<Values>11860.22,1972.973</Values>
+				<Values>12510.27,2070.839</Values>
+				<Values>13170.29,2169.124</Values>
+				<Values>13840.68,2267.704</Values>
+				<Values>14521.49,2366.529</Values>
+				<Values>15212.96,2465.773</Values>
+				<Values>15914.91,2565.190</Values>
+				<Values>16627.02,2664.974</Values>
+				<Values>17349.95,2764.931</Values>
+				<Values>18081.85,2865.133</Values>
+				<Values>18377.07,2965.580</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="39" Row="8" Tp="-11.615" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="40" Row="6" Tp="-9.091" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="41" Row="4" Tp="-6.467" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="42" Row="2" Tp="-3.843" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="43" Row="0" Tp="-1.219" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="44" Row="1" Tp="1.405" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="45" Row="3" Tp="4.029" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="46" Row="5" Tp="6.653" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="47" Row="7" Tp="9.177" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="2" BlockId="3" />
+				<Stack Index="48" Row="8" Tp="-10.130" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="49" Row="6" Tp="-7.584" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="50" Row="4" Tp="-5.038" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="51" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="52" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="53" Row="3" Tp="2.600" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="54" Row="5" Tp="5.146" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="2" BlockId="3" />
+				<Stack Index="55" Row="7" Tp="7.692" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="2" BlockId="3" />
+			</Stacks>
+			<BendingMomentLimit SaggingLimit="-98000.000" HoggingLimit="133000.000" />
+		</Bay>
+		<Bay Name="18">
+			<BayInfo LpMin="59.574" LpMax="74.913" />
+			<LightShipMass Weight="649.807" VP="5.410" />
+			<Tanks>
+				<Tank Name="Tank B18" MaxVolume="389.173" VpEmpty="0.030" VpFull="0.785" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,741.396</Values>
+				<Values>4284.65,829.749</Values>
+				<Values>4805.38,918.521</Values>
+				<Values>5336.29,1007.655</Values>
+				<Values>5876.17,1096.998</Values>
+				<Values>6430.41,1186.452</Values>
+				<Values>6996.76,1276.116</Values>
+				<Values>7572.58,1365.835</Values>
+				<Values>8157.93,1455.457</Values>
+				<Values>8752.44,1545.288</Values>
+				<Values>9355.78,1635.174</Values>
+				<Values>9968.00,1725.005</Values>
+				<Values>10589.33,1814.794</Values>
+				<Values>11220.04,1904.681</Values>
+				<Values>11860.22,1994.511</Values>
+				<Values>12510.27,2084.300</Values>
+				<Values>13170.29,2174.187</Values>
+				<Values>13840.68,2264.073</Values>
+				<Values>14521.49,2353.904</Values>
+				<Values>15212.96,2443.693</Values>
+				<Values>15914.91,2533.580</Values>
+				<Values>16627.02,2623.466</Values>
+				<Values>17349.95,2713.297</Values>
+				<Values>18081.85,2803.086</Values>
+				<Values>18377.07,2892.972</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="56" Row="8" Tp="-11.615" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="57" Row="6" Tp="-9.091" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="58" Row="4" Tp="-6.467" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="59" Row="2" Tp="-3.843" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="60" Row="0" Tp="-1.219" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="61" Row="1" Tp="1.405" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="62" Row="3" Tp="4.029" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="63" Row="5" Tp="6.653" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="64" Row="7" Tp="9.177" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="15.706" ReeferPositions="86;88" HatchCoverId="3" BlockId="4" />
+				<Stack Index="65" Row="8" Tp="-10.130" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="66" Row="6" Tp="-7.584" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="67" Row="4" Tp="-5.038" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="68" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="69" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="70" Row="3" Tp="2.600" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="71" Row="5" Tp="5.146" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+				<Stack Index="72" Row="7" Tp="7.692" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="3" BlockId="4" />
+			</Stacks>
+			<BendingMomentLimit SaggingLimit="-98000.000" HoggingLimit="157396.346" />
+		</Bay>
+		<Bay Name="22">
+			<BayInfo LpMin="42.173" LpMax="59.574" />
+			<LightShipMass Weight="991.859" VP="6.279" />
+			<Tanks>
+				<Tank Name="Tank B22" MaxVolume="812.933" VpEmpty="0.402" VpFull="1.800" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,821.273</Values>
+				<Values>4284.65,921.295</Values>
+				<Values>4805.38,1022.257</Values>
+				<Values>5336.29,1123.688</Values>
+				<Values>5876.17,1225.363</Values>
+				<Values>6430.41,1327.211</Values>
+				<Values>6996.76,1429.181</Values>
+				<Values>7572.58,1531.098</Values>
+				<Values>8157.93,1632.947</Values>
+				<Values>8752.44,1734.916</Values>
+				<Values>9355.78,1836.886</Values>
+				<Values>9968.00,1938.682</Values>
+				<Values>10589.33,2040.652</Values>
+				<Values>11220.04,2142.622</Values>
+				<Values>11860.22,2244.539</Values>
+				<Values>12510.27,2346.387</Values>
+				<Values>13170.29,2448.357</Values>
+				<Values>13840.68,2550.327</Values>
+				<Values>14521.49,2652.245</Values>
+				<Values>15212.96,2754.093</Values>
+				<Values>15914.91,2856.063</Values>
+				<Values>16627.02,2958.033</Values>
+				<Values>17349.95,3059.828</Values>
+				<Values>18081.85,3161.798</Values>
+				<Values>18377.07,3263.768</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="73" Row="8" Tp="-11.615" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="74" Row="6" Tp="-9.091" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="75" Row="4" Tp="-6.467" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="76" Row="2" Tp="-3.843" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="77" Row="0" Tp="-1.219" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="78" Row="1" Tp="1.405" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="79" Row="3" Tp="4.029" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="80" Row="5" Tp="6.653" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="81" Row="7" Tp="9.177" VpMin="14.279" StartTier="86" EndTier="94" Level="OnDeck" MaxWeight="150.000" MaxHeight="17.145" ReeferPositions="86;88" HatchCoverId="4" BlockId="5" />
+				<Stack Index="82" Row="8" Tp="-10.130" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="83" Row="6" Tp="-7.584" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="84" Row="4" Tp="-5.038" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="85" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="86" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="87" Row="3" Tp="2.600" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="88" Row="5" Tp="5.146" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" ReeferPositions="2;4;6;8" HatchCoverId="4" BlockId="5" />
+				<Stack Index="89" Row="7" Tp="7.692" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" ReeferPositions="4;6;8" HatchCoverId="4" BlockId="5" />
+			</Stacks>
+			<BendingMomentLimit SaggingLimit="-98000.000" HoggingLimit="157500.000" />
+		</Bay>
+		<Bay Name="26">
+			<BayInfo LpMin="29.131" LpMax="42.173" />
+			<LightShipMass Weight="400.061" VP="7.176" />
+			<Tanks>
+				<Tank Name="Tank B26" MaxVolume="613.072" VpEmpty="0.775" VpFull="2.745" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,457.966</Values>
+				<Values>4284.65,525.792</Values>
+				<Values>4805.38,595.386</Values>
+				<Values>5336.29,666.329</Values>
+				<Values>5876.17,738.493</Values>
+				<Values>6430.41,811.730</Values>
+				<Values>6996.76,885.779</Values>
+				<Values>7572.58,960.514</Values>
+				<Values>8157.93,1035.920</Values>
+				<Values>8752.44,1111.612</Values>
+				<Values>9355.78,1187.709</Values>
+				<Values>9968.00,1263.956</Values>
+				<Values>10589.33,1340.344</Values>
+				<Values>11220.04,1416.750</Values>
+				<Values>11860.22,1493.167</Values>
+				<Values>12510.27,1569.462</Values>
+				<Values>13170.29,1645.888</Values>
+				<Values>13840.68,1722.310</Values>
+				<Values>14521.49,1798.610</Values>
+				<Values>15212.96,1875.036</Values>
+				<Values>15914.91,1951.462</Values>
+				<Values>16627.02,2027.884</Values>
+				<Values>17349.95,2104.184</Values>
+				<Values>18081.85,2180.610</Values>
+				<Values>18377.07,2257.032</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="90" Row="8" Tp="-11.615" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="91" Row="6" Tp="-9.091" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="92" Row="4" Tp="-6.467" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="93" Row="2" Tp="-3.843" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="94" Row="0" Tp="-1.219" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="95" Row="1" Tp="1.405" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="96" Row="3" Tp="4.029" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="97" Row="5" Tp="6.653" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="98" Row="7" Tp="9.177" VpMin="14.279" StartTier="86" EndTier="96" Level="OnDeck" MaxWeight="150.000" MaxHeight="18.326" ReeferPositions="86;88" HatchCoverId="5" BlockId="6" />
+				<Stack Index="99" Row="8" Tp="-10.130" VpMin="6.595" StartTier="6" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="6.401" HatchCoverId="5" BlockId="6" />
+				<Stack Index="100" Row="6" Tp="-7.584" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="5" BlockId="6" />
+				<Stack Index="101" Row="4" Tp="-5.038" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="5" BlockId="6" />
+				<Stack Index="102" Row="2" Tp="-2.492" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" HatchCoverId="5" BlockId="6" />
+				<Stack Index="103" Row="1" Tp="0.054" VpMin="1.413" StartTier="2" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="11.584" HatchCoverId="5" BlockId="6" />
+				<Stack Index="104" Row="3" Tp="2.600" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="5" BlockId="6" />
+				<Stack Index="105" Row="5" Tp="5.146" VpMin="4.004" StartTier="4" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="8.992" HatchCoverId="5" BlockId="6" />
+				<Stack Index="106" Row="7" Tp="7.692" VpMin="6.595" StartTier="6" EndTier="8" Level="BelowDeck" MaxWeight="240.000" MaxHeight="6.401" HatchCoverId="5" BlockId="6" />
+			</Stacks>
+		</Bay>
+		<Bay Name="30">
+			<BayInfo LpMin="11.945" LpMax="29.131" />
+			<LightShipMass Weight="837.142" VP="6.632" />
+			<Tanks />
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,286.364</Values>
+				<Values>4284.65,325.460</Values>
+				<Values>4805.38,365.566</Values>
+				<Values>5336.29,406.357</Values>
+				<Values>5876.17,447.833</Values>
+				<Values>6430.41,512.764</Values>
+				<Values>6996.76,593.609</Values>
+				<Values>7572.58,678.554</Values>
+				<Values>8157.93,766.675</Values>
+				<Values>8752.44,857.357</Values>
+				<Values>9355.78,950.293</Values>
+				<Values>9968.00,1045.038</Values>
+				<Values>10589.33,1141.114</Values>
+				<Values>11220.04,1238.421</Values>
+				<Values>11860.22,1336.750</Values>
+				<Values>12510.27,1435.794</Values>
+				<Values>13170.29,1535.418</Values>
+				<Values>13840.68,1635.413</Values>
+				<Values>14521.49,1735.715</Values>
+				<Values>15212.96,1836.289</Values>
+				<Values>15914.91,1936.863</Values>
+				<Values>16627.02,2037.537</Values>
+				<Values>17349.95,2138.247</Values>
+				<Values>18081.85,2238.957</Values>
+				<Values>18377.07,2339.495</Values>
+			</BonjeanData>
+			<Stacks>
+				<Stack Index="107" Row="8" Tp="-11.615" VpMin="14.730" StartTier="86" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="20.665" ReeferPositions="86" BlockId="7" />
+				<Stack Index="108" Row="6" Tp="-9.037" VpMin="12.418" StartTier="84" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="23.271" ReeferPositions="84;86" BlockId="7" />
+				<Stack Index="109" Row="4" Tp="-6.265" VpMin="9.518" StartTier="82" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="25.877" ReeferPositions="82;84;86" BlockId="7" />
+				<Stack Index="110" Row="2" Tp="-3.742" VpMin="9.518" StartTier="82" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="25.877" ReeferPositions="82;84;86" BlockId="7" />
+				<Stack Index="111" Row="0" Tp="-1.219" VpMin="9.518" StartTier="82" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="25.877" ReeferPositions="82;84;86" BlockId="7" />
+				<Stack Index="112" Row="1" Tp="1.304" VpMin="9.518" StartTier="82" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="25.877" ReeferPositions="82;84;86" BlockId="7" />
+				<Stack Index="113" Row="3" Tp="3.827" VpMin="9.518" StartTier="82" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="25.877" ReeferPositions="82;84;86" BlockId="7" />
+				<Stack Index="114" Row="5" Tp="6.599" VpMin="12.418" StartTier="84" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="23.271" ReeferPositions="84;86" BlockId="7" />
+				<Stack Index="115" Row="7" Tp="9.177" VpMin="14.730" StartTier="86" EndTier="98" Level="OnDeck" MaxWeight="215.000" MaxHeight="20.665" ReeferPositions="86" BlockId="7" />
+			</Stacks>
+		</Bay>
+		<Bay Name="34">
+			<BayInfo LpMin="-3.590" LpMax="11.945" />
+			<LightShipMass Weight="825.756" VP="12.955" />
+			<Tanks>
+				<Tank Name="Tank B34" MaxVolume="338.140" VpEmpty="6.245" VpFull="8.465" />
+			</Tanks>
+			<BonjeanData Data="Displacement,Volume">
+				<Values>3774.78,104.941</Values>
+				<Values>4284.65,118.704</Values>
+				<Values>4805.38,132.141</Values>
+				<Values>5336.29,145.360</Values>
+				<Values>5876.17,158.206</Values>
+				<Values>6430.41,170.679</Values>
+				<Values>6996.76,182.780</Values>
+				<Values>7572.58,194.662</Values>
+				<Values>8157.93,206.343</Values>
+				<Values>8752.44,218.241</Values>
+				<Values>9355.78,230.403</Values>
+				<Values>9968.00,243.404</Values>
+				<Values>10589.33,258.362</Values>
+				<Values>11220.04,278.632</Values>
+				<Values>11860.22,313.860</Values>
+				<Values>12510.27,364.885</Values>
+				<Values>13170.29,425.012</Values>
+				<Values>13840.68,491.244</Values>
+				<Values>14521.49,562.899</Values>
+				<Values>15212.96,639.760</Values>
+				<Values>15914.91,720.042</Values>
+				<Values>16627.02,803.104</Values>
+				<Values>17349.95,887.954</Values>
+				<Values>18081.85,974.359</Values>
+				<Values>18377.07,1062.068</Values>
+			</BonjeanData>
+			<Stacks />
+		</Bay>
+	</Bays>
+</Vessel>

@@ -129,6 +129,9 @@ def create_exports(
                 ["Dataset", dataset_name],
                 ["Scenario", scenario.get("scenario", "")],
                 ["Route", scenario.get("route", "")],
+                ["Dataset source", scenario.get("source", "")],
+                ["Benchmark mode", scenario.get("benchmark_mode", "")],
+                ["Source instance", scenario.get("source_instance", "")],
                 ["Containers", container_count],
                 ["Slots", slot_count],
                 ["Demand / slot ratio", round(container_count / slot_count, 4) if slot_count else None],
@@ -169,6 +172,10 @@ def create_exports(
             doc.add_paragraph(f"Scenario: {scenario['scenario']}")
         if scenario.get("route"):
             doc.add_paragraph(f"Route: {scenario['route']}")
+        if scenario.get("source"):
+            doc.add_paragraph(f"Dataset source: {scenario['source']}")
+        if scenario.get("benchmark_mode"):
+            doc.add_paragraph(f"Benchmark mode: {scenario['benchmark_mode']}")
         doc.add_paragraph(
             f"Demand: {container_count} containers | Capacity: {slot_count} slots | "
             f"Recommended algorithm: {recommended or 'None'}"
@@ -241,6 +248,8 @@ def create_exports(
             Paragraph(f"<b>Dataset:</b> {dataset_name}", styles["BodyText"]),
             Paragraph(f"<b>Scenario:</b> {scenario.get('scenario', '')}", styles["BodyText"]),
             Paragraph(f"<b>Route:</b> {scenario.get('route', '')}", styles["BodyText"]),
+            Paragraph(f"<b>Dataset source:</b> {scenario.get('source', '')}", styles["BodyText"]),
+            Paragraph(f"<b>Benchmark mode:</b> {scenario.get('benchmark_mode', '')}", styles["BodyText"]),
             Paragraph(
                 f"<b>Demand:</b> {container_count} containers &nbsp;&nbsp; "
                 f"<b>Capacity:</b> {slot_count} slots &nbsp;&nbsp; "

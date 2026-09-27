@@ -1,0 +1,63 @@
+{
+  "dataset_id": "rcspp_medium",
+  "display_name": "RCSPPSuite Medium (adapted m_01)",
+  "benchmark_suite": "RCSPPSuite",
+  "source_instance": "m_01",
+  "source_vessel": "vessel_m",
+  "source_instance_file": "datasets/rcspp/source/Instances/m_01.xml",
+  "source_vessel_file": "datasets/rcspp/source/Vessels/vessel_m.xml",
+  "source_loadlist_count": 4117,
+  "source_physical_cell_count": 3266,
+  "selected_pol": 2,
+  "voyage_port_codes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "generated_container_count": 176,
+  "generated_slot_count": 160,
+  "random_seed": 4202,
+  "adaptation": {
+    "mode": "reduced single-stage RCSPPSuite-derived benchmark",
+    "preserved": [
+      "source container identity",
+      "20/40-foot type",
+      "weight",
+      "POL",
+      "POD",
+      "voyage destination order",
+      "reefer flag",
+      "IMDG flag/type",
+      "pseudoprofit/priority",
+      "vessel bay-row-tier geometry",
+      "reefer positions",
+      "stack maximum-weight data"
+    ],
+    "transformations": [
+      "Container weights are converted from tonnes to kilograms for compatibility with the existing optimizer.",
+      "RCSPP stack maximum weight is conservatively divided across stack tiers to obtain per-position max_weight.",
+      "Physical cells are deterministically assigned a 20/40-foot slot type to match the sampled cargo mix because the academic optimizer uses a one-container-per-slot representation.",
+      "RCSPP Points are mapped to priority (>=100 -> 1, >=50 -> 2, otherwise 3)."
+    ],
+    "not_modeled": [
+      "dynamic arrival-condition evolution across ports",
+      "ballast optimization",
+      "hydrostatic GM",
+      "trim and displacement interpolation",
+      "bending moment",
+      "lashing force limits",
+      "crane makespan/long-crane constraints",
+      "paired block stowage",
+      "40-foot two-half occupancy",
+      "pairwise IMDG segregation distance rules"
+    ]
+  }
+}

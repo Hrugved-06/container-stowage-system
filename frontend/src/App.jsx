@@ -98,6 +98,20 @@ function formatAlgorithmName(name) {
   return found ? found[1] : name;
 }
 
+function formatDatasetName(name) {
+  const labels = {
+    demo: "Demo",
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+    custom: "Custom",
+    rcspp_small: "RCSPPSuite Small",
+    rcspp_medium: "RCSPPSuite Medium",
+    rcspp_large: "RCSPPSuite Large",
+  };
+  return labels[name] || name;
+}
+
 
 function App() {
 
@@ -848,6 +862,11 @@ function App() {
                 <div className="dataset-scenario">
                   <strong>{selectedDataset.description}</strong>
                   <span>{selectedDataset.route}</span>
+                  {selectedDataset.benchmark && (
+                    <span className="benchmark-source">
+                      Public benchmark source: {selectedDataset.source}. Reduced/adapted to the constraints implemented in this prototype.
+                    </span>
+                  )}
                 </div>
 
               </div>
@@ -1065,7 +1084,7 @@ function App() {
                 </span>
 
                 <strong>
-                  {formatAlgorithmName(
+                  {formatDatasetName(
                     results.dataset
                   )}
                 </strong>
@@ -1128,6 +1147,11 @@ function App() {
                   <small>
                     {results.container_count} containers competing for {results.slot_count} slots
                   </small>
+                  {results.scenario?.benchmark && (
+                    <small>
+                      Source: {results.scenario.source} • adapted benchmark mode
+                    </small>
+                  )}
                 </div>
 
                 <div className="export-actions">
