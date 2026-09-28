@@ -19,11 +19,7 @@ const API = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").repla
 
 
 const ALGORITHMS = [
-  ["greedy", "Greedy"],
   ["priority_greedy", "Priority Greedy"],
-  ["best_fit", "Best Fit"],
-  ["randomized_greedy", "Randomized Greedy"],
-  ["simulated_annealing", "Simulated Annealing"],
   ["genetic", "Genetic Algorithm"],
   ["cp_sat", "CP-SAT"],
 ];
@@ -374,12 +370,8 @@ function App() {
           },
 
           body: JSON.stringify({
-
             dataset,
-
-            algorithms:
-              selectedAlgorithms,
-
+            algorithms: ALGORITHMS.map((item) => item[0]),
           }),
 
         }
@@ -973,67 +965,49 @@ function App() {
 
             <div className="algorithm-list">
 
-              {ALGORITHMS.map(
-                ([id, label]) => (
+              <div className="auto-optimization-info">
+  <strong>Automatic Optimization Engine</strong>
 
-                  <label
-                    className="algorithm-item"
-                    key={id}
-                  >
+  <p>
+    The system automatically evaluates multiple optimization
+    strategies and selects the best feasible stowage plan.
+  </p>
 
-                    <input
-                      type="checkbox"
-                      checked={
-                        selectedAlgorithms.includes(
-                          id
-                        )
-                      }
-                      onChange={() =>
-                        toggleAlgorithm(id)
-                      }
-                    />
-
-                    <span>
-                      {label}
-                    </span>
-
-                  </label>
-
-                )
-              )}
+  <div className="optimization-methods">
+    <span>Priority-Based Optimization</span>
+    <span>Genetic Search</span>
+    <span>Constraint Optimization</span>
+  </div>
+</div>
 
             </div>
 
 
             <div className="algorithm-note">
+  <strong>
+    Automatic Plan Selection
+  </strong>
 
-              <strong>
-                Research evaluation
-              </strong>
-
-              <p>
-                All selected algorithms are evaluated
-                using the same placement constraints,
-                feasibility checks and multi-objective
-                scoring framework.
-              </p>
+  <p>
+    The optimization engine automatically evaluates the internal
+    strategies under the same constraints and selects one best
+    feasible stowage plan for the user.
+  </p>
+</div>
 
             </div>
 
 
             <button
-              className="run-button"
-              onClick={runOptimization}
-              disabled={loading}
-            >
+  className="run-button"
+  onClick={runOptimization}
+  disabled={loading}
+>
+  {loading
+    ? "Running Optimization..."
+    : "Generate Best Optimized Stowage Plan"}
+</button>
 
-              {loading
-                ? "Running Optimization..."
-                : "RUN OPTIMIZATION"}
-
-            </button>
-
-          </div>
 
         </section>
 
@@ -1188,7 +1162,7 @@ function App() {
 
                 <span>03</span>
 
-                Algorithm Comparison
+                Best Optimized Stowage Plan
 
               </div>
 
@@ -1216,8 +1190,14 @@ function App() {
 
                   <tbody>
 
-                    {results.comparison.map(
-                      row => (
+                    {results.comparison
+  .filter(
+    row =>
+      row.algorithm ===
+      results.recommended_algorithm
+  )
+  .map(
+    row => (
 
                         <tr
                           key={row.algorithm}

@@ -34,12 +34,103 @@ def _records(df: pd.DataFrame) -> list[dict[str, Any]]:
 
 def select_recommended(comparison: list[dict[str, Any]]) -> str | None:
     successful = [
-        row for row in comparison
-        if row.get("status") == "SUCCESS" and row.get("objective_score") is not None
+        row
+        for row in comparison
+        if row.get("status") == "SUCCESS"
+        and row.get("objective_score") is not None
     ]
+
     if not successful:
         return None
-    return min(successful, key=lambda row: float(row["objective_score"]))["algorithm"]
+
+    def ranking_key(row):
+        return (
+            float(row.get("constraint_violations", 999999)),
+            float(row.get("unassigned", 999999)),
+            -float(row.get("assignment_rate", 0)),
+            float(row.get("objective_score", float("inf"))),
+            float(row.get("weight_imbalance_std", float("inf"))),
+            float(row.get("runtime_seconds", float("inf"))),
+        )
+
+    best_result = min(successful, key=ranking_key)
+
+    return best_result["algorithm"]
+
+    if not successful:
+        return None
+
+    def number(row, *keys, default=0.0):
+        for key in keys:
+            value = row.get(key)
+            if value is not None:
+                try:
+                    return float(value)
+                except (TypeError, ValueError):
+                    pass
+        return float(default)
+
+    def ranking_key(row):
+        # 1. Prefer fewer constraint violations
+        violations = number(
+            row,
+            "violations",
+            "constraint_violations",
+            default=999999,
+        )
+
+        # 2. Prefer more successfully assigned containers
+        assigned = number(
+            row,
+            "assigned_containers",
+            "assigned_count",
+            "containers_assigned",
+            default=0,
+        )
+
+        # If only assignment percentage exists, use that instead.
+        assignment_rate = number(
+            row,
+            "assignment_rate",
+            "assignment_percentage",
+            default=0,
+        )
+
+        # 3. Lower overall objective penalty is better
+        objective = number(
+            row,
+            "objective_score",
+            default=float("inf"),
+        )
+
+        # 4. Lower weight imbalance is better
+        imbalance = number(
+            row,
+            "imbalance",
+            "weight_imbalance",
+            default=float("inf"),
+        )
+
+        # 5. Runtime is only a final tie-breaker
+        runtime = number(
+            row,
+            "runtime_seconds",
+            "runtime",
+            default=float("inf"),
+        )
+
+        return (
+            violations,
+            -assigned,
+            -assignment_rate,
+            objective,
+            imbalance,
+            runtime,
+        )
+
+    best_result = min(successful, key=ranking_key)
+
+    return best_result["algorithm"]
 
 
 def build_loading_plan(solution: pd.DataFrame) -> pd.DataFrame:
