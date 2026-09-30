@@ -494,6 +494,34 @@ function DetailBox({
 /* =========================================================
    APP
 ========================================================= */
+function createRunId(datasetId, date = new Date()) {
+  const stamp = date
+    .toISOString()
+    .replace(/\D/g, "")
+    .slice(0, 14);
+
+  return `RUN-${String(
+    datasetId || "DATA"
+  ).toUpperCase()}-${stamp}`;
+}
+
+function sortPositionValues(a, b) {
+  const numberA = Number(a);
+  const numberB = Number(b);
+
+  if (
+    Number.isFinite(numberA) &&
+    Number.isFinite(numberB)
+  ) {
+    return numberA - numberB;
+  }
+
+  return String(a).localeCompare(
+    String(b),
+    undefined,
+    { numeric: true }
+  );
+}
 
 function App() {
   const [
@@ -536,6 +564,30 @@ function App() {
     setSelectedContainer,
   ] = useState(null);
 
+  const [
+  voyageResult,
+  setVoyageResult,
+] = useState(null);
+
+const [
+  voyageLoading,
+  setVoyageLoading,
+] = useState(false);
+
+const [
+  voyageError,
+  setVoyageError,
+] = useState("");
+
+const [
+  runInfo,
+  setRunInfo,
+] = useState(null);
+
+const [
+  selectedBay,
+  setSelectedBay,
+] = useState("");
   /* =====================================================
      LOAD DATASETS
   ===================================================== */
@@ -732,6 +784,242 @@ function App() {
     plan.length -
     scheduledCount;
 
+    /* =====================================================
+   CONSTRAINT VALIDATION
+===================================================== */
+
+const constraintValidation =
+  useMemo(() => {
+    const assignedContainers =
+      plan.filter(isAssigned);
+
+    const slotIds =
+      assignedContainers
+        .map(
+          (container) =>
+            container.slot_id
+        )
+        .filter(Boolean);
+
+    const containerIds =
+      assignedContainers
+        .map(
+          (container) =>
+            container.container_id
+        )
+        .filter(Boolean);
+
+    const uniqueSlots =
+      new Set(slotIds).size ===
+      slotIds.length;
+
+    const uniqueContainers =
+      new Set(containerIds).size ===
+      containerIds.length;
+
+    const backendConstraintsPassed =
+      Number(
+        recommendedMetrics
+          ?.constraint_violations
+      ) === 0;
+
+    const checks = [
+      {
+        label:
+          "One container per slot",
+        passed: uniqueSlots,
+      },
+      {
+        label:
+          "One slot per container",
+        passed: uniqueContainers,
+      },
+      {
+        label:
+          "Weight limit satisfied",
+        passed:
+          backendConstraintsPassed,
+      },
+      {
+        label:
+          "Container-size compatibility",
+        passed:
+          backendConstraintsPassed,
+      },
+      {
+        label:
+          "Reefer compatibility",
+        passed:
+          backendConstraintsPassed,
+      },
+      {
+        label:
+          "Hazardous cargo eligibility",
+        passed:
+          backendConstraintsPassed,
+      },
+      {
+        label:
+          "No duplicate assignments",
+        passed:
+          uniqueSlots &&
+          uniqueContainers,
+      },
+    ];
+
+    return {
+      checks,
+      feasible:
+        checks.every(
+          (check) =>
+            check.passed
+        ),
+    };
+  }, [
+    plan,
+    recommendedMetrics,
+  ]);
+
+
+/* =====================================================
+   BAY / ROW / TIER LAYOUT
+===================================================== */
+
+const bayLayouts =
+  useMemo(() => {
+    const assigned =
+      plan.filter(
+        (container) =>
+          isAssigned(container) &&
+          container.bay != null &&
+          container.row != null &&
+          container.tier != null
+      );
+
+    const grouped =
+      new Map();
+
+    assigned.forEach(
+      (container) => {
+        const bay =
+          container.bay;
+
+        if (!grouped.has(bay)) {
+          grouped.set(
+            bay,
+            []
+          );
+        }
+
+        grouped
+          .get(bay)
+          .push(container);
+      }
+    );
+
+    return Array.from(
+      grouped.entries()
+    )
+      .sort(
+        ([bayA], [bayB]) =>
+          sortPositionValues(
+            bayA,
+            bayB
+          )
+      )
+      .map(
+        ([bay, containers]) => {
+          const rows = [
+            ...new Set(
+              containers.map(
+                (container) =>
+                  container.row
+              )
+            ),
+          ].sort(
+            sortPositionValues
+          );
+
+          const tiers = [
+            ...new Set(
+              containers.map(
+                (container) =>
+                  container.tier
+              )
+            ),
+          ].sort(
+            (a, b) =>
+              sortPositionValues(
+                b,
+                a
+              )
+          );
+
+          const positions =
+            new Map();
+
+          containers.forEach(
+            (container) => {
+              positions.set(
+                `${container.row}-${container.tier}`,
+                container
+              );
+            }
+          );
+
+          return {
+            bay,
+            rows,
+            tiers,
+            positions,
+          };
+        }
+      );
+  }, [plan]);
+
+
+useEffect(() => {
+  if (!bayLayouts.length) {
+    setSelectedBay("");
+    return;
+  }
+
+  const exists =
+    bayLayouts.some(
+      (layout) =>
+        String(layout.bay) ===
+        String(selectedBay)
+    );
+
+  if (!exists) {
+    setSelectedBay(
+      String(
+        bayLayouts[0].bay
+      )
+    );
+  }
+}, [
+  bayLayouts,
+  selectedBay,
+]);
+
+
+const selectedBayLayout =
+  useMemo(() => {
+    return (
+      bayLayouts.find(
+        (layout) =>
+          String(layout.bay) ===
+          String(selectedBay)
+      ) ||
+      bayLayouts[0] ||
+      null
+    );
+  }, [
+    bayLayouts,
+    selectedBay,
+  ]);
+
   /* =====================================================
      RUN OPTIMIZATION
   ===================================================== */
@@ -748,10 +1036,14 @@ function App() {
     setError("");
     setResults(null);
     setSearch("");
-    setSelectedContainer(
-      null
-    );
 
+    setSelectedContainer(
+  null
+);
+
+setRunInfo(null);
+
+    
     try {
       const response =
         await fetch(
@@ -787,6 +1079,107 @@ function App() {
       }
 
       setResults(data);
+
+const completedAt =
+  new Date();
+
+setRunInfo({
+  id: createRunId(
+    dataset,
+    completedAt
+  ),
+
+  generatedAt:
+    completedAt.toISOString(),
+
+  dataset:
+    data.dataset ||
+    dataset,
+});
+      /* =====================================================
+   AUTOMATIC VOYAGE PLANNING
+===================================================== */
+
+try {
+  setVoyageLoading(true);
+  setVoyageError("");
+  setVoyageResult(null);
+
+  const chosenAlgorithm =
+    data.recommended_algorithm ||
+    getFallbackAlgorithm(
+      data.comparison || []
+    );
+
+  const selectedPlan =
+    data.solutions?.[
+      chosenAlgorithm
+    ] || [];
+
+  const selectedDataset =
+    datasets.find(
+      (item) =>
+        item.id === dataset
+    );
+
+  const route =
+    selectedDataset?.route ||
+    "JNPT (Mumbai) → Colombo → Port Klang → Singapore";
+
+  const voyageResponse =
+    await fetch(
+      `${API}/api/voyage-plan`,
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          route: route,
+
+          plan: selectedPlan,
+
+          vessel_speed_knots: 18,
+
+          fuel_consumption_tpd: 45,
+
+          port_stay_hours: 8,
+
+          emission_factor: 3.114,
+        }),
+      }
+    );
+
+  const voyageData =
+    await voyageResponse.json();
+
+  if (!voyageResponse.ok) {
+    throw new Error(
+      errorMessage(
+        voyageData.detail
+      )
+    );
+  }
+
+  setVoyageResult(
+    voyageData
+  );
+} catch (voyageErr) {
+  console.error(
+    "Voyage planning error:",
+    voyageErr
+  );
+
+  setVoyageError(
+    voyageErr.message ||
+      "Voyage planning failed."
+  );
+} finally {
+  setVoyageLoading(false);
+}
     } catch (err) {
       setError(
         err.message ===
@@ -1382,6 +1775,436 @@ function App() {
               stretch;
           }
         }
+
+        /* =====================================================
+   RUN INFORMATION
+===================================================== */
+
+.run-info-panel {
+  margin-top: 18px;
+  padding: 22px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 16px;
+}
+
+.run-info-panel h3 {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.run-info-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.run-info-grid > div {
+  background: white;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
+  padding: 14px;
+  text-align: center;
+}
+
+.run-info-grid span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  margin-bottom: 6px;
+}
+
+.run-info-grid strong {
+  display: block;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+
+/* =====================================================
+   CONSTRAINT VALIDATION
+===================================================== */
+
+.constraint-validation {
+  margin-top: 18px;
+  padding: 24px;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 16px;
+}
+
+.constraint-validation h3 {
+  margin: 0;
+  text-align: center;
+  font-size: 20px;
+}
+
+.constraint-subtitle {
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  margin: 7px 0 18px;
+}
+
+.constraint-check-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.constraint-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px;
+  background: white;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.constraint-check.passed {
+  border: 1px solid #bbf7d0;
+}
+
+.constraint-check.failed {
+  border: 1px solid #fecaca;
+}
+
+.check-circle {
+  width: 27px;
+  height: 27px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.passed .check-circle {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.failed .check-circle {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.overall-feasible,
+.overall-infeasible {
+  margin: 18px auto 0;
+  max-width: 430px;
+  text-align: center;
+  padding: 13px 18px;
+  border-radius: 11px;
+}
+
+.overall-feasible {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.overall-infeasible {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+/* =====================================================
+   VESSEL LAYOUT
+===================================================== */
+
+.vessel-layout-panel {
+  margin-top: 24px;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ee;
+  border-radius: 18px;
+}
+
+.vessel-layout-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.vessel-layout-header h3 {
+  margin: 0 0 5px;
+}
+
+.vessel-layout-header p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.bay-control {
+  width: 170px;
+  flex-shrink: 0;
+}
+
+.bay-control select {
+  min-height: 42px;
+}
+
+.vessel-bay-title {
+  padding: 12px;
+  text-align: center;
+  background: #0f172a;
+  color: white;
+  border-radius: 11px 11px 0 0;
+  font-weight: 900;
+  letter-spacing: .08em;
+}
+
+.vessel-grid-wrapper {
+  padding: 18px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-top: 0;
+  overflow-x: auto;
+}
+
+.vessel-grid-row {
+  display: grid;
+  gap: 8px;
+  min-width: max-content;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.vessel-grid-heading {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.tier-name {
+  color: #475569;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.vessel-slot {
+  min-height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.vessel-slot.normal {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1px solid #93c5fd;
+}
+
+.vessel-slot.priority {
+  background: #ffedd5;
+  color: #9a3412;
+  border: 1px solid #fdba74;
+}
+
+.vessel-slot.reefer {
+  background: #dcfce7;
+  color: #166534;
+  border: 1px solid #86efac;
+}
+
+.vessel-slot.hazardous {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.vessel-slot.empty {
+  background: #f8fafc;
+  color: #94a3b8;
+  border: 1px dashed #cbd5e1;
+}
+
+.vessel-legend {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 16px;
+  font-size: 11px;
+  color: #475569;
+}
+
+.vessel-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vessel-legend i {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.legend-normal {
+  background: #93c5fd;
+}
+
+.legend-priority {
+  background: #fdba74;
+}
+
+.legend-reefer {
+  background: #86efac;
+}
+
+.legend-hazardous {
+  background: #fca5a5;
+}
+
+.legend-empty {
+  background: #e2e8f0;
+}
+
+
+/* =====================================================
+   VOYAGE ROUTE TIMELINE
+===================================================== */
+
+.voyage-visual-panel {
+  margin-top: 24px;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ee;
+  border-radius: 18px;
+}
+
+.voyage-visual-panel h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.timeline-subtitle {
+  text-align: center;
+  color: #64748b;
+  font-size: 13px;
+  margin: 7px 0 20px;
+}
+
+.route-timeline {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  padding: 6px 2px 14px;
+}
+
+.route-leg-group {
+  display: flex;
+  align-items: center;
+}
+
+.route-node {
+  width: 190px;
+  min-width: 190px;
+  min-height: 150px;
+  padding: 18px 14px;
+  background: white;
+  border: 2px solid #bfdbfe;
+  border-radius: 15px;
+  text-align: center;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+}
+
+.route-start {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.route-final {
+  background: #eff6ff;
+  border-color: #60a5fa;
+}
+
+.route-node-label {
+  color: #2563eb;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+.route-node strong {
+  font-size: 17px;
+  color: #0f172a;
+}
+
+.route-node small {
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.route-connector {
+  width: 150px;
+  min-width: 150px;
+  text-align: center;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.route-arrow {
+  font-size: 32px;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+.route-connector small {
+  display: block;
+  color: #64748b;
+}
+
+
+/* =====================================================
+   RESPONSIVE ADDITIONS
+===================================================== */
+
+@media (max-width: 800px) {
+  .run-info-grid,
+  .constraint-check-grid {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+  }
+
+  .vessel-layout-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bay-control {
+    width: 100%;
+  }
+}
+
+@media (max-width: 550px) {
+  .run-info-grid,
+  .constraint-check-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ================================
    VISIBILITY FIXES
 ================================ */
@@ -1455,7 +2278,7 @@ label {
 
           <div className="hero-tags">
             <span className="green-pill">
-              AI / Optimization Engine
+             AI / Optimization & Voyage Planning Engine
             </span>
 
             <span className="connection">
@@ -1468,7 +2291,7 @@ label {
 
         {/* STEP 1 */}
 
-        <section className="card">
+        <section className="card container-section">
           <div className="step">
             STEP 01
           </div>
@@ -1689,6 +2512,112 @@ label {
                   />
                 </div>
 
+{runInfo && (
+  <div className="run-info-panel">
+    <h3>
+      Run Information
+    </h3>
+
+    <div className="run-info-grid">
+      <div>
+        <span>
+          Run ID
+        </span>
+
+        <strong>
+          {runInfo.id}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Generated
+        </span>
+
+        <strong>
+          {new Date(
+            runInfo.generatedAt
+          ).toLocaleString()}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Dataset
+        </span>
+
+        <strong>
+          {runInfo.dataset}
+        </strong>
+      </div>
+
+      <div>
+        <span>
+          Selected Algorithm
+        </span>
+
+        <strong>
+          {algorithmName(
+            recommendedAlgorithm
+          )}
+        </strong>
+      </div>
+    </div>
+  </div>
+)}
+
+<div className="constraint-validation">
+  <h3>
+    Constraint Validation
+  </h3>
+
+  <p className="constraint-subtitle">
+    Verification of the selected
+    stowage plan against implemented
+    hard constraints.
+  </p>
+
+  <div className="constraint-check-grid">
+    {constraintValidation.checks.map(
+      (check) => (
+        <div
+          key={check.label}
+          className={
+            check.passed
+              ? "constraint-check passed"
+              : "constraint-check failed"
+          }
+        >
+          <span className="check-circle">
+            {check.passed
+              ? "✓"
+              : "✕"}
+          </span>
+
+          <span>
+            {check.label}
+          </span>
+        </div>
+      )
+    )}
+  </div>
+
+  <div
+    className={
+      constraintValidation.feasible
+        ? "overall-feasible"
+        : "overall-infeasible"
+    }
+  >
+    Overall Status:{" "}
+    <strong>
+      {constraintValidation.feasible
+        ? "FEASIBLE"
+        : "REVIEW REQUIRED"}
+    </strong>
+  </div>
+</div>
+
                 <div className="why">
                   <h3>
                     Why this plan was
@@ -1769,6 +2698,198 @@ label {
                     )}
                   />
                 </div>
+
+{selectedBayLayout && (
+  <div className="vessel-layout-panel">
+    <div className="vessel-layout-header">
+      <div>
+        <h3>
+          Vessel Layout Visualization
+        </h3>
+
+        <p>
+          Bay–Row–Tier representation of
+          the selected optimized stowage plan.
+        </p>
+      </div>
+
+      <div className="bay-control">
+        <label>
+          Select Bay
+        </label>
+
+        <select
+          value={selectedBay}
+          onChange={(event) =>
+            setSelectedBay(
+              event.target.value
+            )
+          }
+        >
+          {bayLayouts.map(
+            (layout) => (
+              <option
+                key={
+                  layout.bay
+                }
+                value={
+                  String(
+                    layout.bay
+                  )
+                }
+              >
+                Bay{" "}
+                {String(
+                  layout.bay
+                ).padStart(
+                  2,
+                  "0"
+                )}
+              </option>
+            )
+          )}
+        </select>
+      </div>
+    </div>
+
+    <div className="vessel-bay-title">
+      BAY{" "}
+      {String(
+        selectedBayLayout.bay
+      ).padStart(
+        2,
+        "0"
+      )}
+    </div>
+
+    <div className="vessel-grid-wrapper">
+      <div
+        className="vessel-grid-row vessel-grid-heading"
+        style={{
+          gridTemplateColumns:
+            `90px repeat(${selectedBayLayout.rows.length}, minmax(90px, 1fr))`,
+        }}
+      >
+        <div>
+          Tier / Row
+        </div>
+
+        {selectedBayLayout.rows.map(
+          (row) => (
+            <div key={row}>
+              R{row}
+            </div>
+          )
+        )}
+      </div>
+
+      {selectedBayLayout.tiers.map(
+        (tier) => (
+          <div
+            key={tier}
+            className="vessel-grid-row"
+            style={{
+              gridTemplateColumns:
+                `90px repeat(${selectedBayLayout.rows.length}, minmax(90px, 1fr))`,
+            }}
+          >
+            <div className="tier-name">
+              Tier {tier}
+            </div>
+
+            {selectedBayLayout.rows.map(
+              (row) => {
+                const container =
+                  selectedBayLayout
+                    .positions
+                    .get(
+                      `${row}-${tier}`
+                    );
+
+                let type =
+                  "empty";
+
+                if (container) {
+                  if (
+                    isTrue(
+                      container.hazardous
+                    )
+                  ) {
+                    type =
+                      "hazardous";
+                  } else if (
+                    isTrue(
+                      container.refrigerated
+                    )
+                  ) {
+                    type =
+                      "reefer";
+                  } else if (
+                    ["critical", "high"].includes(
+                      String(
+                        container.priority_level ||
+                        ""
+                      ).toLowerCase()
+                    )
+                  ) {
+                    type =
+                      "priority";
+                  } else {
+                    type =
+                      "normal";
+                  }
+                }
+
+                return (
+                  <div
+                    key={`${row}-${tier}`}
+                    className={`vessel-slot ${type}`}
+                    title={
+                      container
+                        ? `${container.container_id} | ${container.destination} | ${container.slot_id}`
+                        : "Empty position"
+                    }
+                  >
+                    {container
+                      ? container.container_id
+                      : "Empty"}
+                  </div>
+                );
+              }
+            )}
+          </div>
+        )
+      )}
+    </div>
+
+    <div className="vessel-legend">
+      <span>
+        <i className="legend-normal" />
+        Normal
+      </span>
+
+      <span>
+        <i className="legend-priority" />
+        High / Critical Priority
+      </span>
+
+      <span>
+        <i className="legend-reefer" />
+        Reefer
+      </span>
+
+      <span>
+        <i className="legend-hazardous" />
+        Hazardous
+      </span>
+
+      <span>
+        <i className="legend-empty" />
+        Empty
+      </span>
+    </div>
+  </div>
+)}
 
                 <div className="toolbar">
                   <input
@@ -2110,6 +3231,528 @@ label {
             </>
           )}
 
+          {/* =====================================================
+    STEP 04 - VOYAGE PLANNING
+===================================================== */}
+
+{results && (
+  <section className="card voyage-section">
+    <div className="step">
+      STEP 04
+    </div>
+
+    <h2>
+      Voyage Planning
+    </h2>
+
+    <p className="muted">
+      Port-wise voyage schedule generated
+      from the selected optimized stowage
+      plan and container destinations.
+    </p>
+
+    {voyageLoading && (
+      <div
+        style={{
+          marginTop: "20px",
+          padding: "22px",
+          textAlign: "center",
+          background: "#eff6ff",
+          border: "1px solid #bfdbfe",
+          borderRadius: "14px",
+          color: "#1d4ed8",
+          fontWeight: "800",
+        }}
+      >
+        Generating voyage plan...
+      </div>
+    )}
+
+    {voyageError && (
+      <div className="error">
+        <strong>
+          Voyage Planning Error
+        </strong>
+
+        <div>
+          {voyageError}
+        </div>
+      </div>
+    )}
+
+    {voyageResult && (
+      <>
+        {/* ROUTE */}
+
+        <div
+          style={{
+            marginTop: "22px",
+            padding: "22px",
+            borderRadius: "16px",
+            background: "#0f172a",
+            color: "#ffffff",
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "12px",
+              letterSpacing: "0.12em",
+              color: "#93c5fd",
+              fontWeight: "900",
+              marginBottom: "10px",
+            }}
+          >
+            VOYAGE ROUTE
+          </div>
+
+          <div
+            style={{
+              fontSize: "22px",
+              fontWeight: "800",
+            }}
+          >
+            {voyageResult.route_text}
+          </div>
+        </div>
+
+{/* VISUAL ROUTE TIMELINE */}
+
+<div className="voyage-visual-panel">
+  <h3>
+    Visual Route Timeline
+  </h3>
+
+  <p className="timeline-subtitle">
+    Port sequence and discharge activity
+    derived from the selected cargo plan.
+  </p>
+
+  <div className="route-timeline">
+    <div className="route-node route-start">
+      <span className="route-node-label">
+        DEPARTURE
+      </span>
+
+      <strong>
+        {voyageResult.legs?.[0]
+          ?.from_port ||
+          voyageResult.route?.[0] ||
+          "JNPT (Mumbai)"}
+      </strong>
+
+      <small>
+        {
+          voyageResult.summary
+            ?.scheduled_containers
+        }{" "}
+        containers loaded
+      </small>
+
+      {voyageResult.departure_time && (
+        <small>
+          {new Date(
+            voyageResult.departure_time
+          ).toLocaleString()}
+        </small>
+      )}
+    </div>
+
+    {(voyageResult.legs || []).map(
+      (leg, index) => (
+        <div
+          className="route-leg-group"
+          key={leg.sequence}
+        >
+          <div className="route-connector">
+            <span>
+              {formatNumber(
+                leg.distance_nm
+              )}{" "}
+              NM
+            </span>
+
+            <div className="route-arrow">
+              →
+            </div>
+
+            <small>
+              {formatNumber(
+                leg.sailing_hours
+              )}{" "}
+              hrs
+            </small>
+          </div>
+
+          <div
+            className={`route-node ${
+              index ===
+              voyageResult.legs.length -
+                1
+                ? "route-final"
+                : ""
+            }`}
+          >
+            <span className="route-node-label">
+              {index ===
+              voyageResult.legs.length -
+                1
+                ? "FINAL PORT"
+                : `PORT ${leg.sequence}`}
+            </span>
+
+            <strong>
+              {leg.to_port}
+            </strong>
+
+            <small>
+              Discharge:{" "}
+              {
+                leg.containers_to_discharge
+              }{" "}
+              containers
+            </small>
+
+            <small>
+              ETA:{" "}
+              {leg.estimated_arrival
+                ? new Date(
+                    leg.estimated_arrival
+                  ).toLocaleString()
+                : "N/A"}
+            </small>
+          </div>
+        </div>
+      )
+    )}
+  </div>
+</div>
+
+        {/* VOYAGE METRICS */}
+
+        <div className="stats">
+          <Stat
+            label="Total Distance"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.total_distance_nm
+            )} NM`}
+          />
+
+          <Stat
+            label="Sailing Time"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.total_sailing_hours
+            )} hrs`}
+          />
+
+          <Stat
+            label="Estimated Fuel"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.estimated_sailing_fuel_tonnes
+            )} t`}
+          />
+
+          <Stat
+            label="Estimated CO₂"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.estimated_co2_tonnes
+            )} t`}
+          />
+        </div>
+
+        <div className="stats">
+          <Stat
+            label="Voyage Duration"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.estimated_total_voyage_days
+            )} days`}
+          />
+
+          <Stat
+            label="Port Stay"
+            value={`${formatNumber(
+              voyageResult.summary
+                ?.total_port_stay_hours
+            )} hrs`}
+          />
+
+          <Stat
+            label="Scheduled Cargo"
+            value={
+              voyageResult.summary
+                ?.scheduled_containers ??
+              "N/A"
+            }
+          />
+
+          <Stat
+            label="Unscheduled Cargo"
+            value={
+              voyageResult.summary
+                ?.unscheduled_containers ??
+              "N/A"
+            }
+          />
+        </div>
+
+        {/* PORT SCHEDULE */}
+
+        <div
+          style={{
+            marginTop: "28px",
+          }}
+        >
+          <h3
+            style={{
+              textAlign: "center",
+              color: "#0f172a",
+            }}
+          >
+            Port-wise Voyage Schedule
+          </h3>
+
+          <div className="voyage-table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    Leg
+                  </th>
+
+                  <th>
+                    From
+                  </th>
+
+                  <th>
+                    To
+                  </th>
+
+                  <th>
+                    Distance
+                  </th>
+
+                  <th>
+                    Sailing Time
+                  </th>
+
+                  <th>
+                    ETA
+                  </th>
+
+                  <th>
+                    Containers
+                    to Discharge
+                  </th>
+
+                  <th>
+                    Port Stay
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {(
+                  voyageResult.legs ||
+                  []
+                ).map((leg) => (
+                  <tr
+                    key={
+                      leg.sequence
+                    }
+                  >
+                    <td>
+                      <strong>
+                        {
+                          leg.sequence
+                        }
+                      </strong>
+                    </td>
+
+                    <td>
+                      {
+                        leg.from_port
+                      }
+                    </td>
+
+                    <td>
+                      {
+                        leg.to_port
+                      }
+                    </td>
+
+                    <td>
+                      {formatNumber(
+                        leg.distance_nm
+                      )}{" "}
+                      NM
+                    </td>
+
+                    <td>
+                      {formatNumber(
+                        leg.sailing_hours
+                      )}{" "}
+                      hrs
+                    </td>
+
+                    <td>
+                      {leg.estimated_arrival
+                        ? new Date(
+                            leg.estimated_arrival
+                          ).toLocaleString()
+                        : "N/A"}
+                    </td>
+
+                    <td>
+                      <strong>
+                        {
+                          leg.containers_to_discharge
+                        }
+                      </strong>
+                    </td>
+
+                    <td>
+                      {formatNumber(
+                        leg.port_stay_hours
+                      )}{" "}
+                      hrs
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* PORT CARGO SUMMARY */}
+
+        <div
+          style={{
+            marginTop: "28px",
+          }}
+        >
+          <h3
+            style={{
+              textAlign: "center",
+              color: "#0f172a",
+            }}
+          >
+            Port Cargo Summary
+          </h3>
+
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>
+                    Sequence
+                  </th>
+
+                  <th>
+                    Port
+                  </th>
+
+                  <th>
+                    Operation
+                  </th>
+
+                  <th>
+                    Containers
+                  </th>
+
+                  <th>
+                    Cargo Weight
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {(
+                  voyageResult.port_cargo ||
+                  []
+                ).map(
+                  (
+                    port,
+                    index
+                  ) => (
+                    <tr
+                      key={`${port.port}-${index}`}
+                    >
+                      <td>
+                        {
+                          port.sequence
+                        }
+                      </td>
+
+                      <td>
+                        <strong>
+                          {
+                            port.port
+                          }
+                        </strong>
+                      </td>
+
+                      <td>
+                        {
+                          port.operation
+                        }
+                      </td>
+
+                      <td>
+                        {
+                          port.containers
+                        }
+                      </td>
+
+                      <td>
+                        {formatNumber(
+                          port.cargo_weight
+                        )}{" "}
+                        kg
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* DISCLAIMER */}
+
+        <div
+          style={{
+            marginTop: "20px",
+            padding: "15px",
+            borderRadius: "12px",
+            background: "#fff7ed",
+            border:
+              "1px solid #fed7aa",
+            color: "#9a3412",
+            fontSize: "13px",
+            lineHeight: 1.6,
+          }}
+        >
+          <strong>
+            Academic Voyage Planning:
+          </strong>{" "}
+          Sailing distance, ETA, fuel and
+          emission values are planning
+          estimates based on configured
+          vessel parameters and predefined
+          port sequence. This module is not
+          intended for certified maritime
+          navigation.
+        </div>
+      </>
+    )}
+  </section>
+)}
+
         {/* CONTAINER MODAL */}
 
         {selectedContainer && (
@@ -2132,7 +3775,7 @@ label {
               <div className="modal-header">
                 <div>
                   <div className="step">
-                    CONTAINER DETAILS
+                      COMPARATIVE ANALYSIS
                   </div>
 
                   <h2>

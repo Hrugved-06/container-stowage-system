@@ -1419,3 +1419,195 @@ footer {
   color: #44516a;
   font-size: 11px;
 }
+
+/* =========================================================
+   CONTAINER SCHEDULING + VOYAGE PLANNING ALIGNMENT FIX
+========================================================= */
+
+/* Section headings */
+.container-section .step,
+.voyage-section .step {
+  width: 100%;
+  text-align: center;
+}
+
+.container-section h2,
+.voyage-section h2 {
+  width: 100%;
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.voyage-section > p,
+.container-section > p {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
+/* =========================================================
+   SUMMARY CARDS
+========================================================= */
+
+.container-section .stats,
+.voyage-section .stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.container-section .stats > *,
+.voyage-section .stats > * {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =========================================================
+   CONTAINER TABLE
+========================================================= */
+
+.container-section .table-wrap {
+  width: 100%;
+}
+
+.container-section table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.container-section th,
+.container-section td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 16px 10px;
+}
+
+/* Destination */
+.container-section th:nth-child(4),
+.container-section td:nth-child(4) {
+  text-align: center;
+}
+
+/* Operational priority */
+.container-section td:nth-child(3) {
+  vertical-align: middle;
+}
+
+/* Buttons */
+.container-section td:last-child {
+  text-align: center;
+}
+
+
+/* =========================================================
+   VOYAGE PLANNING
+========================================================= */
+
+.voyage-section {
+  text-align: center;
+}
+
+.voyage-section .table-wrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.voyage-section table {
+  width: 100% !important;
+  min-width: 0 !important;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.voyage-section th,
+.voyage-section td {
+  text-align: center;
+  vertical-align: middle;
+  padding: 15px 8px;
+  line-height: 1.4;
+}
+
+/* From + To ports */
+.voyage-section th:nth-child(2),
+.voyage-section td:nth-child(2),
+.voyage-section th:nth-child(3),
+.voyage-section td:nth-child(3) {
+  text-align: center;
+}
+
+/* ETA can wrap instead of creating huge horizontal width */
+.voyage-section th:nth-child(6),
+.voyage-section td:nth-child(6) {
+  white-space: normal;
+  word-break: normal;
+}
+
+/* Containers to discharge */
+.voyage-section th:nth-child(7),
+.voyage-section td:nth-child(7) {
+  text-align: center;
+}
+
+/* Port stay */
+.voyage-section th:nth-child(8),
+.voyage-section td:nth-child(8) {
+  text-align: center;
+}
+
+
+/* =========================================================
+   PORT CARGO SUMMARY
+========================================================= */
+
+.voyage-section h3 {
+  text-align: center;
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.voyage-section table strong {
+  display: inline-block;
+  text-align: center;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 900px) {
+  .container-section .stats,
+  .voyage-section .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .container-section .table-wrap,
+  .voyage-section .table-wrap {
+    overflow-x: auto;
+  }
+
+  .container-section table {
+    min-width: 900px;
+  }
+
+  .voyage-section table {
+    min-width: 850px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .container-section .stats,
+  .voyage-section .stats {
+    grid-template-columns: 1fr;
+  }
+}

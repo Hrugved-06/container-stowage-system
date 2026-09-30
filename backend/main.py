@@ -18,6 +18,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
+try:
+    from .voyage_planner import router as voyage_router
+except ImportError:
+    from voyage_planner import router as voyage_router
+
 
 # ---------------------------------------------------------
 # PROJECT PATH
@@ -72,6 +77,8 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.include_router(voyage_router)
+
 
 # ---------------------------------------------------------
 # CORS
@@ -79,11 +86,9 @@ app = FastAPI(
 
 LOCAL_ORIGINS = [
     "http://localhost:5173",
-    "http://localhost:5174",
-    "http://localhost:5175",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
     "http://127.0.0.1:5174",
-    "http://127.0.0.1:5175",
 ]
 
 EXTRA_ORIGINS = [
@@ -95,7 +100,6 @@ EXTRA_ORIGINS = [
 app.add_middleware(
     CORSMiddleware,
     allow_origins=LOCAL_ORIGINS + EXTRA_ORIGINS,
-    # Vercel production and preview URLs are accepted automatically.
     allow_origin_regex=r"https://[a-zA-Z0-9-]+\.vercel\.app",
     allow_credentials=False,
     allow_methods=["*"],
