@@ -33,7 +33,7 @@ if str(PROJECT_ROOT) not in sys.path:
 # OPTIMIZATION IMPORTS
 # ---------------------------------------------------------
 
-from optimization.algorithms import ALGORITHMS
+from optimization.algorithms import ALGORITHMS, enrich_container_priorities
 from optimization.evaluation import evaluate_solution
 from optimization.objective import calculate_objective_score
 
@@ -79,9 +79,11 @@ app = FastAPI(
 
 LOCAL_ORIGINS = [
     "http://localhost:5173",
-    "http://127.0.0.1:5173",
     "http://localhost:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5173",
     "http://127.0.0.1:5174",
+    "http://127.0.0.1:5175",
 ]
 
 EXTRA_ORIGINS = [
@@ -683,6 +685,7 @@ def optimize(
     comparison = []
     solutions = {}
 
+    containers = enrich_container_priorities(containers)
 
     for algorithm_name in request.algorithms:
 

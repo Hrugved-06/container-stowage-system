@@ -1,61 +1,434 @@
 import { useEffect, useMemo, useState } from "react";
 
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-} from "recharts";
+const API = (
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://127.0.0.1:8000"
+).replace(/\/$/, "");
 
-import "./App.css";
-
-
-const API = (import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000").replace(/\/$/, "");
-
-
-const ALGORITHMS = [
-  ["priority_greedy", "Priority Greedy"],
-  ["genetic", "Genetic Algorithm"],
-  ["cp_sat", "CP-SAT"],
+const CORE_ALGORITHMS = [
+  "priority_greedy",
+  "genetic",
+  "cp_sat",
 ];
 
+const ALGORITHM_NAMES = {
+  priority_greedy: "Priority Greedy",
+  genetic: "Genetic Algorithm",
+  cp_sat: "CP-SAT",
+};
 
-const CONTAINER_FIELDS = [
-  "container_id",
-  "size",
-  "weight",
-  "destination",
-  "destination_order",
-  "priority",
-  "hazardous",
-  "refrigerated",
-];
+/* =========================================================
+   HELPERS
+========================================================= */
 
+function algorithmName(value) {
+  return ALGORITHM_NAMES[value] || value || "N/A";
+}
 
-const SLOT_FIELDS = [
-  "slot_id",
-  "bay",
-  "row",
-  "tier",
-  "size",
-  "max_weight",
-  "reefer_capable",
-  "hazardous_allowed",
-];
+function numberValue(value, fallback = 0) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
 
+function formatNumber(value, digits = 2) {
+  const n = Number(value);
 
-function getErrorMessage(detail) {
+  return Number.isFinite(n)
+    ? n.toFixed(digits)
+    : "N/A";
+}
 
-  if (!detail) {
-    return "An unexpected error occurred.";
+function formatPercent(value) {
+  const n = Number(value);
+
+  return Number.isFinite(n)
+    ? `${n.toFixed(2)}%`
+    : "N/A";
+}
+
+function isTrue(value) {
+  if (typeof value === "boolean") {
+    return value;
   }
 
-  if (typeof detail === "string") {
+  return ["true", "1", "yes", "y"].includes(
+    String(value ?? "")
+      .trim()
+      .toLowerCase()
+  );
+}
+
+function isAssigned(container) {
+  if (!container) {
+    return false;
+  }
+
+  if (typeof container.assigned === "boolean") {
+    return container.assigned;
+  }
+
+  const slot =
+    container.slot_id ??
+    container.slotId;
+
+  return Boolean(
+    slot &&
+      String(slot).toLowerCase() !== "none" &&
+      String(slot).toLowerCase() !== "n/a"
+  );
+}
+
+function normalizeContainer(raw = {}) {
+  return {
+    ...raw,
+
+    container_id:
+      raw.container_id ??
+      raw.containerId ??
+      raw.id ??
+      "N/A",
+
+    slot_id:
+      raw.slot_id ??
+      raw.slotId ??
+      null,
+
+    container_size:
+      raw.container_size ??
+      raw.size ??
+      raw.containerSize ??
+      "N/A",
+
+    container_weight:
+      raw.container_weight ??
+      raw.weight ??
+      raw.containerWeight ??
+      "N/A",
+
+    destination:
+      raw.destination ??
+      "N/A",
+
+    destination_order:
+      raw.destination_order ??
+      raw.destinationOrder ??
+      "N/A",
+
+    priority:
+      raw.priority ??
+      "N/A",
+
+    priority_score:
+      raw.priority_score ??
+      raw.priorityScore ??
+      null,
+
+    priority_level:
+      raw.priority_level ??
+      raw.priorityLevel ??
+      null,
+
+    priority_reason:
+      raw.priority_reason ??
+      raw.priorityReason ??
+      "",
+
+    hazardous:
+      raw.hazardous ?? false,
+
+    refrigerated:
+      raw.refrigerated ?? false,
+
+    bay:
+      raw.bay ?? null,
+
+    row:
+      raw.row ?? null,
+
+    tier:
+      raw.tier ?? null,
+
+    assigned:
+      typeof raw.assigned === "boolean"
+        ? raw.assigned
+        : undefined,
+  };
+}
+
+/* =========================================================
+   PRIORITY EXPLANATION
+========================================================= */
+
+function getPriorityReasons(container) {
+  if (!container) {
+    return [];
+  }
+
+  if (
+    container.priority_reason &&
+    String(container.priority_reason).trim() !== "" &&
+    String(
+      container.priority_reason
+    ).toLowerCase() !== "n/a"
+  ) {
+    return String(container.priority_reason)
+      .split(";")
+      .map((reason) => reason.trim())
+      .filter(Boolean);
+  }
+
+  const reasons = [];
+
+  if (
+    container.priority !== undefined &&
+    container.priority !== null &&
+    container.priority !== "N/A"
+  ) {
+    reasons.push(
+      `Input business priority: ${container.priority}`
+    );
+  }
+
+  if (
+    container.destination_order !== undefined &&
+    container.destination_order !== null &&
+    container.destination_order !== "N/A"
+  ) {
+    reasons.push(
+      `Destination sequence order: ${container.destination_order}`
+    );
+  }
+
+  if (isTrue(container.hazardous)) {
+    reasons.push(
+      "Hazardous cargo requires safety-compatible placement"
+    );
+  }
+
+  if (isTrue(container.refrigerated)) {
+    reasons.push(
+      "Refrigerated cargo requires a reefer-compatible slot"
+    );
+  }
+
+  if (reasons.length === 0) {
+    reasons.push(
+      "Normal operational priority based on available container attributes"
+    );
+  }
+
+  return reasons;
+}
+
+/* =========================================================
+   PLACEMENT EXPLANATION
+========================================================= */
+
+function getPlacementReasons(container) {
+  if (!container) {
+    return [];
+  }
+
+  if (!isAssigned(container)) {
+    return [
+      "No feasible vessel slot was assigned to this container.",
+      "This can occur because of vessel capacity or implemented compatibility constraints.",
+      "The optimizer leaves the container unassigned instead of creating an invalid placement.",
+    ];
+  }
+
+  const reasons = [
+    `Assigned to slot ${container.slot_id} at Bay ${container.bay}, Row ${container.row}, Tier ${container.tier}.`,
+    "Container-to-slot feasibility checks were satisfied.",
+    "This placement is part of the automatically selected optimized plan.",
+  ];
+
+  if (
+    container.container_size !== "N/A"
+  ) {
+    reasons.push(
+      `Container size ${container.container_size} is compatible with the selected slot.`
+    );
+  }
+
+  if (
+    container.container_weight !== "N/A"
+  ) {
+    reasons.push(
+      `Container weight ${container.container_weight} satisfies the implemented slot weight rule.`
+    );
+  }
+
+  if (isTrue(container.hazardous)) {
+    reasons.push(
+      "Hazardous-cargo slot eligibility was considered."
+    );
+  }
+
+  if (isTrue(container.refrigerated)) {
+    reasons.push(
+      "Reefer compatibility was considered for this refrigerated container."
+    );
+  }
+
+  return reasons;
+}
+
+/* =========================================================
+   PRIORITY COLOR
+========================================================= */
+
+function getPriorityStyle(level) {
+  const value = String(
+    level || ""
+  ).toLowerCase();
+
+  if (value === "critical") {
+    return {
+      backgroundColor: "#fee2e2",
+      color: "#991b1b",
+      border: "1px solid #fecaca",
+    };
+  }
+
+  if (value === "high") {
+    return {
+      backgroundColor: "#ffedd5",
+      color: "#9a3412",
+      border: "1px solid #fed7aa",
+    };
+  }
+
+  if (value === "medium") {
+    return {
+      backgroundColor: "#fef9c3",
+      color: "#854d0e",
+      border: "1px solid #fde68a",
+    };
+  }
+
+  return {
+    backgroundColor: "#dcfce7",
+    color: "#166534",
+    border: "1px solid #bbf7d0",
+  };
+}
+
+/* =========================================================
+   FALLBACK BEST PLAN SELECTION
+========================================================= */
+
+function getFallbackAlgorithm(
+  comparison = []
+) {
+  const successful =
+    comparison.filter(
+      (row) =>
+        row.status === "SUCCESS"
+    );
+
+  if (!successful.length) {
+    return null;
+  }
+
+  const sorted = [
+    ...successful,
+  ].sort((a, b) => {
+    const tests = [
+      [
+        numberValue(
+          a.constraint_violations,
+          999999
+        ),
+        numberValue(
+          b.constraint_violations,
+          999999
+        ),
+      ],
+
+      [
+        numberValue(
+          a.unassigned,
+          999999
+        ),
+        numberValue(
+          b.unassigned,
+          999999
+        ),
+      ],
+
+      [
+        -numberValue(
+          a.assignment_rate,
+          0
+        ),
+        -numberValue(
+          b.assignment_rate,
+          0
+        ),
+      ],
+
+      [
+        numberValue(
+          a.objective_score,
+          Infinity
+        ),
+        numberValue(
+          b.objective_score,
+          Infinity
+        ),
+      ],
+
+      [
+        numberValue(
+          a.weight_imbalance_std,
+          Infinity
+        ),
+        numberValue(
+          b.weight_imbalance_std,
+          Infinity
+        ),
+      ],
+
+      [
+        numberValue(
+          a.runtime_seconds,
+          Infinity
+        ),
+        numberValue(
+          b.runtime_seconds,
+          Infinity
+        ),
+      ],
+    ];
+
+    for (const [left, right] of tests) {
+      if (left < right) {
+        return -1;
+      }
+
+      if (left > right) {
+        return 1;
+      }
+    }
+
+    return 0;
+  });
+
+  return (
+    sorted[0]?.algorithm ||
+    null
+  );
+}
+
+function errorMessage(detail) {
+  if (!detail) {
+    return "Unexpected error.";
+  }
+
+  if (
+    typeof detail === "string"
+  ) {
     return detail;
   }
 
@@ -63,1564 +436,1977 @@ function getErrorMessage(detail) {
     return detail.message;
   }
 
-  if (detail.errors) {
-    return detail.errors.join("\n");
-  }
-
-  if (detail.missing_container_columns) {
-    return (
-      "Missing container columns:\n" +
-      detail.missing_container_columns.join(", ")
+  if (
+    Array.isArray(detail.errors)
+  ) {
+    return detail.errors.join(
+      "\n"
     );
   }
 
-  if (detail.missing_slot_columns) {
-    return (
-      "Missing slot columns:\n" +
-      detail.missing_slot_columns.join(", ")
-    );
+  try {
+    return JSON.stringify(detail);
+  } catch {
+    return "Unexpected error.";
   }
-
-  return JSON.stringify(detail, null, 2);
 }
 
+/* =========================================================
+   SMALL COMPONENTS
+========================================================= */
 
-function formatAlgorithmName(name) {
-
-  const found = ALGORITHMS.find(
-    item => item[0] === name
+function Metric({
+  label,
+  value,
+}) {
+  return (
+    <div className="metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
   );
-
-  return found ? found[1] : name;
 }
 
-function formatDatasetName(name) {
-  const labels = {
-    demo: "Demo",
-    small: "Small",
-    medium: "Medium",
-    large: "Large",
-    custom: "Custom",
-    rcspp_small: "RCSPPSuite Small",
-    rcspp_medium: "RCSPPSuite Medium",
-    rcspp_large: "RCSPPSuite Large",
-  };
-  return labels[name] || name;
+function Stat({
+  label,
+  value,
+}) {
+  return (
+    <div className="stat">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
 }
 
+function DetailBox({
+  label,
+  value,
+}) {
+  return (
+    <div className="detail-box">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+/* =========================================================
+   APP
+========================================================= */
 
 function App() {
+  const [
+    datasets,
+    setDatasets,
+  ] = useState([]);
 
-  const [datasets, setDatasets] = useState([]);
+  const [
+    dataset,
+    setDataset,
+  ] = useState("small");
 
-  const [dataset, setDataset] = useState("demo");
+  const [
+    backendOnline,
+    setBackendOnline,
+  ] = useState(false);
 
-  const [selectedAlgorithms, setSelectedAlgorithms] =
-    useState(
-      ALGORITHMS.map(item => item[0])
-    );
+  const [
+    results,
+    setResults,
+  ] = useState(null);
 
-  const [customFiles, setCustomFiles] = useState([]);
+  const [
+    loading,
+    setLoading,
+  ] = useState(false);
 
-  const [uploadSummary, setUploadSummary] = useState(null);
+  const [
+    error,
+    setError,
+  ] = useState("");
 
-  const [uploaded, setUploaded] =
-    useState(false);
+  const [
+    search,
+    setSearch,
+  ] = useState("");
 
-  const [loading, setLoading] =
-    useState(false);
+  const [
+    selectedContainer,
+    setSelectedContainer,
+  ] = useState(null);
 
-  const [results, setResults] =
-    useState(null);
-
-  const [error, setError] =
-    useState("");
-
-  const [errorTitle, setErrorTitle] =
-    useState("Notice");
-
-  const [activeAlgorithm, setActiveAlgorithm] =
-    useState(null);
-
-  const [backendOnline, setBackendOnline] =
-    useState(false);
-
-
-  // -------------------------------------------------------
-  // LOAD DATASETS
-  // -------------------------------------------------------
-
-  const loadDatasets = async () => {
-
-    try {
-
-      const response = await fetch(
-        `${API}/api/datasets`
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          getErrorMessage(data.detail)
-        );
-      }
-
-      setDatasets(data);
-
-      setBackendOnline(true);
-
-      const custom = data.find(
-        item => item.id === "custom"
-      );
-
-      if (custom?.available) {
-        setUploaded(true);
-      }
-
-    } catch (err) {
-
-      setBackendOnline(false);
-
-      setErrorTitle("Connection Error");
-      setError(
-        "Could not connect to the backend. Start FastAPI on port 8000."
-      );
-
-    }
-  };
-
+  /* =====================================================
+     LOAD DATASETS
+  ===================================================== */
 
   useEffect(() => {
-    loadDatasets();
-  }, []);
+    async function load() {
+      try {
+        const response =
+          await fetch(
+            `${API}/api/datasets`
+          );
 
+        const data =
+          await response.json();
 
-  // -------------------------------------------------------
-  // SELECTED DATASET
-  // -------------------------------------------------------
+        if (!response.ok) {
+          throw new Error(
+            errorMessage(
+              data.detail
+            )
+          );
+        }
 
-  const selectedDataset =
-    datasets.find(
-      item => item.id === dataset
-    );
+        const list =
+          Array.isArray(data)
+            ? data
+            : [];
 
+        setDatasets(list);
 
-  // -------------------------------------------------------
-  // ALGORITHM CONTROLS
-  // -------------------------------------------------------
+        setBackendOnline(true);
 
-  const toggleAlgorithm = (name) => {
+        const small =
+          list.find(
+            (item) =>
+              item.id ===
+                "small" &&
+              item.available
+          );
 
-    setSelectedAlgorithms(current => {
+        const first =
+          list.find(
+            (item) =>
+              item.available
+          );
 
-      if (current.includes(name)) {
-
-        return current.filter(
-          item => item !== name
+        if (small) {
+          setDataset(
+            small.id
+          );
+        } else if (first) {
+          setDataset(
+            first.id
+          );
+        }
+      } catch (err) {
+        setBackendOnline(
+          false
         );
 
+        setError(
+          "Backend connection failed. Start FastAPI on http://127.0.0.1:8000"
+        );
+      }
+    }
+
+    load();
+  }, []);
+
+  /* =====================================================
+     RECOMMENDED ALGORITHM
+  ===================================================== */
+
+  const recommendedAlgorithm =
+    useMemo(() => {
+      if (!results) {
+        return null;
       }
 
-      return [
-        ...current,
-        name
-      ];
-
-    });
-
-  };
-
-
-  const selectAll = () => {
-
-    setSelectedAlgorithms(
-      ALGORITHMS.map(item => item[0])
-    );
-
-  };
-
-
-  const clearAlgorithms = () => {
-
-    setSelectedAlgorithms([]);
-
-  };
-
-
-  // -------------------------------------------------------
-  // DATASET SELECTION
-  // -------------------------------------------------------
-
-  const handleDatasetChange = (event) => {
-
-    const value = event.target.value;
-
-    setDataset(value);
-
-    setResults(null);
-    setActiveAlgorithm(null);
-    setError("");
-    setErrorTitle("Notice");
-
-  };
-
-
-  // -------------------------------------------------------
-  // SMART MULTI-FILE SELECTION
-  // -------------------------------------------------------
-
-  const handleCustomFiles = (event) => {
-    const files = Array.from(event.target.files || []);
-    setCustomFiles(files);
-    setUploaded(false);
-    setUploadSummary(null);
-    setError("");
-    setErrorTitle("Notice");
-    setResults(null);
-  };
-
-
-  // -------------------------------------------------------
-  // CUSTOM DATASET UPLOAD
-  // -------------------------------------------------------
-
-  const uploadCustomDataset = async () => {
-    setUploaded(false);
-    setUploadSummary(null);
-    setError("");
-    setErrorTitle("Upload Error");
-
-    if (customFiles.length < 2) {
-      setError("Select at least two CSV files containing cargo/container data and vessel-slot data.");
-      return;
-    }
-
-    const formData = new FormData();
-    customFiles.forEach(file => formData.append("files", file));
-    setLoading(true);
-
-    try {
-      const response = await fetch(`${API}/api/upload`, { method: "POST", body: formData });
-      const data = await response.json();
-      if (!response.ok) throw new Error(getErrorMessage(data.detail));
-      setUploaded(true);
-      setUploadSummary(data);
-      setDataset("custom");
-      await loadDatasets();
-    } catch (err) {
-      setUploaded(false);
-      setErrorTitle("Upload Error");
-      setError(err.message || "The selected files could not be uploaded.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-
-  // -------------------------------------------------------
-  // RUN OPTIMIZATION
-  // -------------------------------------------------------
-
-  const runOptimization = async () => {
-
-    setErrorTitle("Optimization Error");
-
-    if (selectedAlgorithms.length === 0) {
-
-      setError(
-        "Select at least one algorithm."
+      return (
+        results.recommended_algorithm ||
+        getFallbackAlgorithm(
+          results.comparison ||
+            []
+        )
       );
+    }, [results]);
 
-      return;
+  /* =====================================================
+     RECOMMENDED METRICS
+  ===================================================== */
 
-    }
+  const recommendedMetrics =
+    useMemo(() => {
+      if (
+        !results ||
+        !recommendedAlgorithm
+      ) {
+        return null;
+      }
 
-
-    if (
-      dataset === "custom" &&
-      !uploaded
-    ) {
-
-      setError(
-        "Upload the custom dataset before running optimization."
+      return (
+        results.comparison?.find(
+          (row) =>
+            row.algorithm ===
+              recommendedAlgorithm &&
+            row.status ===
+              "SUCCESS"
+        ) || null
       );
+    }, [
+      results,
+      recommendedAlgorithm,
+    ]);
 
-      return;
+  /* =====================================================
+     RECOMMENDED SOLUTION
+  ===================================================== */
 
-    }
+  const plan =
+    useMemo(() => {
+      if (
+        !results ||
+        !recommendedAlgorithm
+      ) {
+        return [];
+      }
 
+      const raw =
+        results.solutions?.[
+          recommendedAlgorithm
+        ] || [];
 
-    setLoading(true);
-    setError("");
-    setResults(null);
-    setActiveAlgorithm(null);
+      return Array.isArray(
+        raw
+      )
+        ? raw.map(
+            normalizeContainer
+          )
+        : [];
+    }, [
+      results,
+      recommendedAlgorithm,
+    ]);
 
+  /* =====================================================
+     FILTER
+  ===================================================== */
 
-    try {
+  const filteredPlan =
+    useMemo(() => {
+      const query =
+        search
+          .trim()
+          .toLowerCase();
 
-      const response = await fetch(
-        `${API}/api/optimize`,
-        {
-          method: "POST",
+      if (!query) {
+        return plan;
+      }
 
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
+      return plan.filter(
+        (container) => {
+          const text = [
+            container.container_id,
+            container.destination,
+            container.priority,
+            container.priority_level,
+            container.priority_score,
+            container.slot_id,
+            container.bay,
+            container.row,
+            container.tier,
+          ]
+            .map((value) =>
+              String(
+                value ?? ""
+              ).toLowerCase()
+            )
+            .join(" ");
 
-          body: JSON.stringify({
-            dataset,
-            algorithms: ALGORITHMS.map((item) => item[0]),
-          }),
-
+          return text.includes(
+            query
+          );
         }
       );
+    }, [plan, search]);
 
+  const scheduledCount =
+    plan.filter(
+      isAssigned
+    ).length;
+
+  const unscheduledCount =
+    plan.length -
+    scheduledCount;
+
+  /* =====================================================
+     RUN OPTIMIZATION
+  ===================================================== */
+
+  async function runOptimization() {
+    if (!backendOnline) {
+      setError(
+        "Backend is offline."
+      );
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+    setResults(null);
+    setSearch("");
+    setSelectedContainer(
+      null
+    );
+
+    try {
+      const response =
+        await fetch(
+          `${API}/api/optimize`,
+          {
+            method: "POST",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body: JSON.stringify(
+              {
+                dataset,
+
+                algorithms:
+                  CORE_ALGORITHMS,
+              }
+            ),
+          }
+        );
 
       const data =
         await response.json();
 
-
       if (!response.ok) {
-
         throw new Error(
-          getErrorMessage(data.detail)
+          errorMessage(
+            data.detail
+          )
         );
-
       }
-
 
       setResults(data);
-
-
-      const firstSuccessful =
-        data.comparison?.find(
-          item =>
-            item.status === "SUCCESS"
-        );
-
-
-      if (firstSuccessful) {
-
-        setActiveAlgorithm(
-          firstSuccessful.algorithm
-        );
-
-      }
-
-
     } catch (err) {
-
-      const message = err?.message === "Failed to fetch"
-        ? "The optimization request could not reach the backend. Confirm the backend terminal is still running, then try again."
-        : (err?.message || "Optimization could not be completed.");
-
-      setErrorTitle("Optimization Error");
-      setError(message);
-
+      setError(
+        err.message ===
+          "Failed to fetch"
+          ? "Could not reach backend. Make sure FastAPI is running."
+          : err.message
+      );
     } finally {
-
       setLoading(false);
-
     }
-
-  };
-
-
-  const downloadExport = (path) => {
-    if (!path) return;
-    const encoded = path.split("/").map(encodeURIComponent).join("/");
-    window.open(`${API}/api/download/${encoded}`, "_blank", "noopener,noreferrer");
-  };
-
-
-  // -------------------------------------------------------
-  // ACTIVE SOLUTION
-  // -------------------------------------------------------
-
-  const activeSolution = useMemo(() => {
-
-    if (
-      !results ||
-      !activeAlgorithm
-    ) {
-
-      return [];
-
-    }
-
-
-    return (
-      results.solutions?.[
-        activeAlgorithm
-      ] || []
-    );
-
-  }, [
-    results,
-    activeAlgorithm,
-  ]);
-
-
-  // -------------------------------------------------------
-  // SUCCESSFUL RESULTS
-  // -------------------------------------------------------
-
-  const successfulResults =
-    results?.comparison?.filter(
-      item =>
-        item.status === "SUCCESS"
-    ) || [];
-
-
-  // -------------------------------------------------------
-  // DYNAMIC RESEARCH SUMMARY
-  // -------------------------------------------------------
-
-  const researchSummary = useMemo(() => {
-
-    if (!results) {
-      return null;
-    }
-
-
-    const totalAlgorithms =
-      results.comparison?.length || 0;
-
-
-    const successful =
-      successfulResults.length;
-
-
-    const failed =
-      totalAlgorithms - successful;
-
-
-    const allFullAssignment =
-      successful > 0 &&
-      successfulResults.every(
-        item =>
-          Number(item.assignment_rate) === 100
-      );
-
-
-    const allConstraintFree =
-      successful > 0 &&
-      successfulResults.every(
-        item =>
-          Number(item.constraint_violations) === 0
-      );
-
-
-    const assignmentRates =
-      successfulResults.map(
-        item =>
-          Number(item.assignment_rate)
-      );
-
-
-    const utilizationValues =
-      successfulResults.map(
-        item =>
-          Number(item.slot_utilization)
-      );
-
-
-    const objectiveValues =
-      successfulResults.map(
-        item =>
-          Number(item.objective_score)
-      );
-
-
-    const runtimeValues =
-      successfulResults.map(
-        item =>
-          Number(item.runtime_seconds)
-      );
-
-
-    const averageAssignment =
-      assignmentRates.length
-        ? (
-            assignmentRates.reduce(
-              (a, b) => a + b,
-              0
-            ) / assignmentRates.length
-          ).toFixed(1)
-        : "0";
-
-
-    const averageUtilization =
-      utilizationValues.length
-        ? (
-            utilizationValues.reduce(
-              (a, b) => a + b,
-              0
-            ) / utilizationValues.length
-          ).toFixed(1)
-        : "0";
-
-
-    const minObjective =
-      objectiveValues.length
-        ? Math.min(...objectiveValues)
-        : null;
-
-
-    const maxObjective =
-      objectiveValues.length
-        ? Math.max(...objectiveValues)
-        : null;
-
-
-    const minRuntime =
-      runtimeValues.length
-        ? Math.min(...runtimeValues)
-        : null;
-
-
-    const maxRuntime =
-      runtimeValues.length
-        ? Math.max(...runtimeValues)
-        : null;
-
-
-    let summary =
-      `The ${formatAlgorithmName(results.dataset)} dataset contained ` +
-      `${results.container_count} containers and ` +
-      `${results.slot_count} available slots. `;
-
-
-    summary +=
-      `${successful} of ${totalAlgorithms} selected algorithms ` +
-      `completed successfully`;
-
-
-    if (failed > 0) {
-
-      summary +=
-        `, while ${failed} algorithm` +
-        `${failed === 1 ? "" : "s"} failed during execution`;
-
-    }
-
-
-    summary += ". ";
-
-
-    if (allFullAssignment) {
-
-      summary +=
-        "All completed algorithms achieved a 100% assignment rate. ";
-
-    } else {
-
-      summary +=
-        `The average assignment rate across completed algorithms was ` +
-        `${averageAssignment}%. `;
-
-    }
-
-
-    if (allConstraintFree) {
-
-      summary +=
-        "No constraint violations were recorded in the completed solutions. ";
-
-    } else {
-
-      summary +=
-        "Constraint-violation counts differed across the completed solutions. ";
-
-    }
-
-
-    summary +=
-      `Average slot utilization was ${averageUtilization}%. `;
-
-
-    if (
-      minObjective !== null &&
-      maxObjective !== null
-    ) {
-
-      summary +=
-        `Objective scores ranged from ` +
-        `${minObjective.toFixed(2)} to ` +
-        `${maxObjective.toFixed(2)}. `;
-
-    }
-
-
-    if (
-      minRuntime !== null &&
-      maxRuntime !== null
-    ) {
-
-      summary +=
-        `Observed algorithm runtimes ranged from ` +
-        `${minRuntime.toFixed(3)} to ` +
-        `${maxRuntime.toFixed(3)} seconds. `;
-
-    }
-
-
-    summary +=
-      "These results demonstrate trade-offs between computational runtime, " +
-      "stowage quality and resource utilization under the same constraint " +
-      "and evaluation framework. The comparison is intended to support " +
-      "multi-objective analysis rather than identify a universally superior algorithm.";
-
-
-    return {
-      text: summary,
-      successful,
-      failed,
-      averageAssignment,
-      averageUtilization,
-    };
-
-
-  }, [
-    results,
-    successfulResults,
-  ]);
-
+  }
+
+  /* =====================================================
+     UI
+  ===================================================== */
 
   return (
-
     <div className="app">
+      <style>
+        {`
+        * {
+          box-sizing: border-box;
+        }
 
+        body {
+          margin: 0;
+          background: #eef2f7;
+          color: #0f172a;
+          font-family: Arial, Helvetica, sans-serif;
+        }
 
-      {/* ================================================= */}
-      {/* HEADER */}
-      {/* ================================================= */}
+        button,
+        input,
+        select {
+          font: inherit;
+        }
 
-      <header className="topbar">
+        .app {
+          min-height: 100vh;
+          padding: 28px 18px 60px;
+          background:
+            radial-gradient(
+              circle at top left,
+              rgba(37,99,235,.08),
+              transparent 420px
+            ),
+            #eef2f7;
+        }
 
-        <div className="hero-content">
+        .container {
+          width: min(1180px, 100%);
+          margin: auto;
+        }
 
-          <div className="eyebrow">
-            AI-ASSISTED
+        .hero {
+          background: #111827;
+          color: white;
+          padding: 45px 34px;
+          border-radius: 26px;
+        }
+
+        .hero-small {
+          color: #cbd5e1;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: .18em;
+        }
+
+        .hero h1 {
+          font-size: clamp(
+            34px,
+            5vw,
+            58px
+          );
+          line-height: 1.05;
+          max-width: 1000px;
+          margin: 14px 0;
+        }
+
+        .hero p {
+          color: #dbe4f0;
+          font-size: 17px;
+        }
+
+        .hero-tags {
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-top: 24px;
+        }
+
+        .green-pill {
+          background: #22c55e;
+          color: #052e16;
+          padding: 10px 15px;
+          border-radius: 999px;
+          font-size: 12px;
+          font-weight: 900;
+        }
+
+        .connection {
+          background:
+            rgba(
+              255,
+              255,
+              255,
+              .08
+            );
+          border:
+            1px solid
+            rgba(
+              255,
+              255,
+              255,
+              .15
+            );
+          padding: 10px 15px;
+          border-radius: 999px;
+          font-size: 12px;
+        }
+
+        .card {
+          background: white;
+          border:
+            1px solid
+            #e2e8f0;
+          border-radius: 24px;
+          padding: 30px;
+          margin-top: 24px;
+        }
+
+        .step {
+          color: #2563eb;
+          font-size: 12px;
+          font-weight: 900;
+          letter-spacing: .16em;
+        }
+
+        .card h2 {
+          margin:
+            8px 0
+            5px;
+          font-size: 26px;
+        }
+
+        .muted {
+          color: #64748b;
+          line-height: 1.6;
+        }
+
+        .form-grid {
+          display: grid;
+          grid-template-columns:
+            1fr 1fr;
+          gap: 16px;
+          margin-top: 22px;
+        }
+
+        label {
+          display: block;
+          font-size: 12px;
+          font-weight: 800;
+          margin-bottom: 8px;
+        }
+
+        select {
+          width: 100%;
+          min-height: 58px;
+          border:
+            1px solid
+            #cbd5e1;
+          border-radius: 14px;
+          padding: 0 15px;
+          background: white;
+        }
+
+        .mode {
+          min-height: 58px;
+          display: flex;
+          align-items: center;
+          justify-content:
+            center;
+          background: #f1f5f9;
+          border:
+            1px solid
+            #cbd5e1;
+          border-radius: 14px;
+          font-weight: 800;
+        }
+
+        .strategies {
+          margin-top: 18px;
+          padding: 20px;
+          background: #eff6ff;
+          border:
+            1px solid
+            #bfdbfe;
+          border-radius: 16px;
+          text-align: center;
+        }
+
+        .chips {
+          display: flex;
+          justify-content:
+            center;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+
+        .chip {
+          padding: 8px 12px;
+          border:
+            1px solid
+            #bfdbfe;
+          border-radius: 999px;
+          background: white;
+          font-size: 12px;
+          font-weight: 800;
+        }
+
+        .run {
+          width: 100%;
+          min-height: 56px;
+          margin-top: 18px;
+          border: 0;
+          border-radius: 14px;
+          background: #2563eb;
+          color: white;
+          font-weight: 900;
+          cursor: pointer;
+        }
+
+        .run:disabled {
+          opacity: .55;
+        }
+
+        .error {
+          margin-top: 16px;
+          background: #fff1f2;
+          border:
+            1px solid
+            #fecaca;
+          color: #991b1b;
+          padding: 15px;
+          border-radius: 12px;
+          text-align: center;
+        }
+
+        .plan-head {
+          display: flex;
+          justify-content:
+            space-between;
+          gap: 20px;
+          align-items: center;
+          background: #f8fafc;
+          padding: 20px;
+          border-radius: 15px;
+        }
+
+        .plan-head span {
+          display: block;
+          color: #64748b;
+        }
+
+        .plan-head strong {
+          display: block;
+          font-size: 24px;
+          margin-top: 4px;
+        }
+
+        .metrics {
+          display: grid;
+          grid-template-columns:
+            repeat(
+              6,
+              1fr
+            );
+          gap: 10px;
+          margin-top: 16px;
+        }
+
+        .metric,
+        .stat,
+        .detail-box {
+          background: #f8fafc;
+          border:
+            1px solid
+            #e2e8f0;
+          border-radius: 14px;
+          padding: 15px;
+          text-align: center;
+        }
+
+        .metric span,
+        .stat span,
+        .detail-box span {
+          display: block;
+          color: #64748b;
+          font-size: 11px;
+          margin-bottom: 6px;
+        }
+
+        .metric strong {
+          font-size: 20px;
+        }
+
+        .why {
+          margin-top: 18px;
+          padding: 22px;
+          background: #f0fdf4;
+          border:
+            1px solid
+            #bbf7d0;
+          border-radius: 16px;
+        }
+
+        .why h3 {
+          text-align: center;
+        }
+
+        .why-list {
+          max-width: 760px;
+          margin: auto;
+          line-height: 2;
+        }
+
+        .stats {
+          display: grid;
+          grid-template-columns:
+            repeat(
+              4,
+              1fr
+            );
+          gap: 12px;
+          margin-top: 20px;
+        }
+
+        .stat strong {
+          font-size: 21px;
+        }
+
+        .toolbar {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          margin:
+            20px 0
+            14px;
+        }
+
+        .toolbar input {
+          flex: 1;
+          min-height: 45px;
+          background: #263141;
+          color: white;
+          border:
+            1px solid
+            #334155;
+          border-radius: 10px;
+          padding: 0 14px;
+        }
+
+        .table-wrap {
+          overflow-x: auto;
+          border:
+            1px solid
+            #e2e8f0;
+          border-radius: 15px;
+        }
+
+        table {
+          width: 100%;
+          min-width: 1050px;
+          border-collapse:
+            collapse;
+        }
+
+        th {
+          background: #f8fafc;
+          padding: 14px 12px;
+          text-align: left;
+          font-size: 11px;
+          border-bottom:
+            1px solid
+            #e2e8f0;
+        }
+
+        td {
+          padding: 13px 12px;
+          font-size: 13px;
+          border-bottom:
+            1px solid
+            #eef2f7;
+        }
+
+        .scheduled {
+          display:
+            inline-flex;
+          background: #dcfce7;
+          color: #166534;
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .unscheduled {
+          display:
+            inline-flex;
+          background: #fee2e2;
+          color: #991b1b;
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 11px;
+          font-weight: 800;
+        }
+
+        .priority-cell {
+          display: flex;
+          flex-direction:
+            column;
+          align-items:
+            flex-start;
+          gap: 4px;
+        }
+
+        .priority-badge {
+          padding: 5px 9px;
+          border-radius: 999px;
+          font-size: 10px;
+          font-weight: 900;
+          text-transform:
+            uppercase;
+        }
+
+        .priority-score {
+          font-size: 10px;
+          color: #64748b;
+        }
+
+        .view {
+          border:
+            1px solid
+            #bfdbfe;
+          background: #eff6ff;
+          color: #1d4ed8;
+          border-radius: 8px;
+          padding: 7px 10px;
+          font-weight: 800;
+          cursor: pointer;
+        }
+
+        .selected-row {
+          background: #f0fdf4;
+        }
+
+        .modal-overlay {
+          position: fixed;
+          inset: 0;
+          z-index: 9999;
+          background:
+            rgba(
+              15,
+              23,
+              42,
+              .70
+            );
+          display: grid;
+          place-items: center;
+          padding: 20px;
+        }
+
+        .modal {
+          width:
+            min(
+              1050px,
+              100%
+            );
+          max-height: 90vh;
+          overflow-y: auto;
+          background: white;
+          border-radius: 22px;
+          padding: 26px;
+        }
+
+        .modal-header {
+          display: flex;
+          justify-content:
+            space-between;
+          align-items:
+            flex-start;
+        }
+
+        .close {
+          width: 40px;
+          height: 40px;
+          border-radius: 50%;
+          border:
+            1px solid
+            #e2e8f0;
+          background: white;
+          font-size: 23px;
+          cursor: pointer;
+        }
+
+        .details {
+          display: grid;
+          grid-template-columns:
+            repeat(
+              4,
+              1fr
+            );
+          gap: 10px;
+          margin-top: 18px;
+        }
+
+        .modal-section {
+          margin-top: 18px;
+          padding: 22px;
+          border:
+            1px solid
+            #e2e8f0;
+          border-radius: 15px;
+          background: #f8fafc;
+        }
+
+        .modal-section h3 {
+          text-align: center;
+          margin-top: 0;
+        }
+
+        .priority-summary {
+          display: flex;
+          justify-content:
+            center;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 18px;
+        }
+
+        .info-pill {
+          padding: 8px 15px;
+          border-radius: 999px;
+          background: #eff6ff;
+          border:
+            1px solid
+            #bfdbfe;
+          color: #1d4ed8;
+          font-weight: 800;
+        }
+
+        .reason-list {
+          line-height: 1.9;
+          color: #334155;
+        }
+
+        @media (
+          max-width: 900px
+        ) {
+          .metrics {
+            grid-template-columns:
+              repeat(
+                3,
+                1fr
+              );
+          }
+
+          .stats,
+          .details {
+            grid-template-columns:
+              repeat(
+                2,
+                1fr
+              );
+          }
+        }
+
+        @media (
+          max-width: 650px
+        ) {
+          .form-grid,
+          .metrics,
+          .stats,
+          .details {
+            grid-template-columns:
+              1fr;
+          }
+
+          .toolbar {
+            flex-direction:
+              column;
+            align-items:
+              stretch;
+          }
+        }
+/* ================================
+   VISIBILITY FIXES
+================================ */
+
+.card h2 {
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+.card h3,
+.card h4 {
+  color: #0f172a !important;
+}
+
+.modal h2,
+.modal h3,
+.modal h4 {
+  color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+select {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: #0f172a !important;
+  opacity: 1 !important;
+}
+
+select option {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+label {
+  color: #334155 !important;
+}
+
+.step {
+  color: #2563eb !important;
+}
+
+.modal {
+  color: #0f172a !important;
+}
+
+.modal-header h2 {
+  color: #0f172a !important;
+}
+        `}
+      </style>
+
+      <main className="container">
+        {/* HERO */}
+
+        <section className="hero">
+          <div className="hero-small">
+          
           </div>
 
           <h1>
-            CONTAINER STOWAGE PLANNER
+            AI-Driven Container Vessel
+            Cargo Scheduling &amp;
+            Voyage Planning System
           </h1>
 
           <p>
-            Multi-Objective Optimization Framework
-            for Constraint-Aware Container Stowage Planning
+            Automatic constraint-aware
+            container assignment and optimized
+            Bay–Row–Tier stowage planning.
           </p>
 
-        </div>
+          <div className="hero-tags">
+            <span className="green-pill">
+              AI / Optimization Engine
+            </span>
 
-
-        <div
-          className={
-            backendOnline
-              ? "status-pill online"
-              : "status-pill offline"
-          }
-        >
-
-          <span className="status-dot"></span>
-
-          {backendOnline
-            ? "System Ready"
-            : "Backend Offline"}
-
-        </div>
-
-      </header>
-
-
-      <main className="container">
-
-
-        {/* ================================================= */}
-        {/* ERROR */}
-        {/* ================================================= */}
-
-        {error && (
-          <div className="error-box">
-            <div className="error-title">{errorTitle}</div>
-            <div className="error-message">{error}</div>
+            <span className="connection">
+              {backendOnline
+                ? "● Backend Connected"
+                : "● Backend Offline"}
+            </span>
           </div>
-        )}
-
-
-        {/* ================================================= */}
-        {/* CONFIGURATION */}
-        {/* ================================================= */}
-
-        <section className="grid two">
-
-
-          {/* ------------------------------------------------ */}
-          {/* DATASET CARD */}
-          {/* ------------------------------------------------ */}
-
-          <div className="card">
-
-            <div className="section-title">
-
-              <span>01</span>
-
-              Select Dataset
-
-            </div>
-
-
-            <p className="section-description">
-              Choose a prepared benchmark dataset or
-              upload your own container and slot data.
-            </p>
-
-
-            <label>
-              Benchmark Dataset
-            </label>
-
-
-            <select
-              value={dataset}
-              onChange={handleDatasetChange}
-            >
-
-              {datasets
-                .filter(
-                  item =>
-                    item.id !== "custom"
-                )
-                .map(item => (
-
-                  <option
-                    key={item.id}
-                    value={item.id}
-                    disabled={!item.available}
-                  >
-
-                    {item.name}
-                    {" — "}
-                    {item.available
-                      ? `${item.containers} containers / ${item.slots} slots`
-                      : "Not available"}
-
-                  </option>
-
-                ))}
-
-
-              <option value="custom">
-                Custom — Upload your own data
-              </option>
-
-            </select>
-
-
-            {selectedDataset &&
-              dataset !== "custom" && (
-
-              <div className="dataset-info">
-
-                <div>
-
-                  <strong>
-                    {selectedDataset.containers}
-                  </strong>
-
-                  <span>
-                    Containers
-                  </span>
-
-                </div>
-
-
-                <div>
-
-                  <strong>
-                    {selectedDataset.slots}
-                  </strong>
-
-                  <span>
-                    Slots
-                  </span>
-
-                </div>
-
-                <div className="dataset-scenario">
-                  <strong>{selectedDataset.description}</strong>
-                  <span>{selectedDataset.route}</span>
-                  {selectedDataset.benchmark && (
-                    <span className="benchmark-source">
-                      Public benchmark source: {selectedDataset.source}. Reduced/adapted to the constraints implemented in this prototype.
-                    </span>
-                  )}
-                </div>
-
-              </div>
-
-            )}
-
-
-            {/* ------------------------------------------------ */}
-            {/* CUSTOM UPLOAD */}
-            {/* ------------------------------------------------ */}
-
-            <div className="custom-upload">
-
-              <div className="upload-heading">
-                <div>
-                  <h3>Custom Dataset</h3>
-                  <p>Select the CSV files for this stowage run.</p>
-                </div>
-              </div>
-
-              <div className="smart-upload-panel compact-upload">
-                <label className="file-button">
-                  Select CSV Files
-                  <input
-                    type="file"
-                    accept=".csv,text/csv"
-                    multiple
-                    onChange={handleCustomFiles}
-                  />
-                </label>
-
-                <div className="selected-file">
-                  {customFiles.length
-                    ? `${customFiles.length} file(s) selected: ${customFiles.map(f => f.name).join(", ")}`
-                    : "No files selected"}
-                </div>
-              </div>
-
-              <button
-                className="secondary"
-                onClick={uploadCustomDataset}
-                disabled={loading}
-              >
-                {loading ? "Uploading..." : "Upload Dataset"}
-              </button>
-
-              {uploaded && dataset === "custom" && (
-                <div className="success compact-success">
-                  <strong>✓ Dataset ready</strong>
-                  {uploadSummary && (
-                    <span>
-                      {uploadSummary.container_count} containers • {uploadSummary.slot_count} slots • {uploadSummary.files_processed} files
-                    </span>
-                  )}
-                </div>
-              )}
-
-            </div>
-
-          </div>
-
-
-          {/* ------------------------------------------------ */}
-          {/* ALGORITHM CARD */}
-          {/* ------------------------------------------------ */}
-
-          <div className="card">
-
-            <div className="section-title">
-
-              <span>02</span>
-
-              Select Algorithms
-
-            </div>
-
-
-            <p className="section-description">
-              Select one or more optimization methods to
-              compare them under the same dataset and
-              constraint framework.
-            </p>
-
-
-            <div className="algorithm-actions">
-
-              <button
-                className="text-button"
-                onClick={selectAll}
-              >
-                Select All
-              </button>
-
-
-              <button
-                className="text-button clear-button"
-                onClick={clearAlgorithms}
-              >
-                Clear
-              </button>
-
-            </div>
-
-
-            <div className="algorithm-list">
-
-              <div className="auto-optimization-info">
-  <strong>Automatic Optimization Engine</strong>
-
-  <p>
-    The system automatically evaluates multiple optimization
-    strategies and selects the best feasible stowage plan.
-  </p>
-
-  <div className="optimization-methods">
-    <span>Priority-Based Optimization</span>
-    <span>Genetic Search</span>
-    <span>Constraint Optimization</span>
-  </div>
-</div>
-
-            </div>
-
-
-            <div className="algorithm-note">
-  <strong>
-    Automatic Plan Selection
-  </strong>
-
-  <p>
-    The optimization engine automatically evaluates the internal
-    strategies under the same constraints and selects one best
-    feasible stowage plan for the user.
-  </p>
-</div>
-
-            </div>
-
-
-            <button
-  className="run-button"
-  onClick={runOptimization}
-  disabled={loading}
->
-  {loading
-    ? "Running Optimization..."
-    : "Generate Best Optimized Stowage Plan"}
-</button>
-
-
         </section>
 
+        {/* STEP 1 */}
 
-        {/* ================================================= */}
-        {/* LOADING */}
-        {/* ================================================= */}
+        <section className="card">
+          <div className="step">
+            STEP 01
+          </div>
 
-        {loading && (
+          <h2>
+            Generate Optimized Plan
+          </h2>
 
-          <section className="card loading-card">
+          <p className="muted">
+            Select a dataset. The system
+            automatically evaluates the core
+            optimization strategies.
+          </p>
 
-            <div className="loader"></div>
+          <div className="form-grid">
+            <div>
+              <label>
+                Dataset
+              </label>
 
-            <h2>
-              Optimization in Progress
-            </h2>
+              <select
+                value={dataset}
+                onChange={(event) => {
+                  setDataset(
+                    event.target.value
+                  );
 
-            <p>
-              Heuristic methods normally complete quickly,
-              while metaheuristic methods may require
-              significantly more computation.
+                  setResults(
+                    null
+                  );
+
+                  setError("");
+                }}
+              >
+                {datasets
+                  .filter(
+                    (item) =>
+                      item.id !==
+                      "custom"
+                  )
+                  .map((item) => (
+                    <option
+                      key={
+                        item.id
+                      }
+                      value={
+                        item.id
+                      }
+                      disabled={
+                        !item.available
+                      }
+                    >
+                      {item.name} —{" "}
+                      {
+                        item.containers
+                      }{" "}
+                      containers /{" "}
+                      {item.slots}{" "}
+                      slots
+                    </option>
+                  ))}
+              </select>
+            </div>
+
+            <div>
+              <label>
+                Optimization Mode
+              </label>
+
+              <div className="mode">
+                Automatic Best-Plan
+                Selection
+              </div>
+            </div>
+          </div>
+
+          <div className="strategies">
+            <h3>
+              Internal Optimization
+              Strategies
+            </h3>
+
+            <p className="muted">
+              The system evaluates all core
+              optimization methods internally
+              and returns one final plan.
             </p>
 
-          </section>
+            <div className="chips">
+              <span className="chip">
+                Priority-Based
+                Optimization
+              </span>
 
-        )}
+              <span className="chip">
+                Genetic Search
+              </span>
 
+              <span className="chip">
+                Constraint
+                Optimization
+              </span>
+            </div>
+          </div>
 
-        {/* ================================================= */}
+          <button
+            type="button"
+            className="run"
+            disabled={
+              loading ||
+              !backendOnline
+            }
+            onClick={
+              runOptimization
+            }
+          >
+            {loading
+              ? "Running Optimization..."
+              : "Generate Best Optimized Stowage Plan"}
+          </button>
+
+          {error && (
+            <div className="error">
+              <strong>
+                Optimization Error
+              </strong>
+
+              <div>{error}</div>
+            </div>
+          )}
+        </section>
+
         {/* RESULTS */}
-        {/* ================================================= */}
 
-        {results && (
+        {results &&
+          recommendedMetrics && (
+            <>
+              {/* STEP 2 */}
 
-          <>
-
-            {/* ------------------------------------------------ */}
-            {/* SUMMARY METRICS */}
-            {/* ------------------------------------------------ */}
-
-            <section className="summary-grid">
-
-              <div className="metric-card">
-
-                <span>
-                  Dataset
-                </span>
-
-                <strong>
-                  {formatDatasetName(
-                    results.dataset
-                  )}
-                </strong>
-
-              </div>
-
-
-              <div className="metric-card">
-
-                <span>
-                  Containers
-                </span>
-
-                <strong>
-                  {results.container_count}
-                </strong>
-
-              </div>
-
-
-              <div className="metric-card">
-
-                <span>
-                  Slots
-                </span>
-
-                <strong>
-                  {results.slot_count}
-                </strong>
-
-              </div>
-
-
-              <div className="metric-card">
-
-                <span>
-                  Total Runtime
-                </span>
-
-                <strong>
-                  {Number(
-                    results.total_runtime_seconds
-                  ).toFixed(2)}s
-                </strong>
-
-              </div>
-
-            </section>
-
-
-            <section className="card result-action-card">
-              <div className="recommended-summary">
-                <div>
-                  <span className="mini-label">Recommended Plan</span>
-                  <strong>
-                    {results.recommended_algorithm
-                      ? formatAlgorithmName(results.recommended_algorithm)
-                      : "No successful plan"}
-                  </strong>
-                  <small>
-                    {results.container_count} containers competing for {results.slot_count} slots
-                  </small>
-                  {results.scenario?.benchmark && (
-                    <small>
-                      Source: {results.scenario.source} • adapted benchmark mode
-                    </small>
-                  )}
+              <section className="card">
+                <div className="step">
+                  STEP 02
                 </div>
 
-                <div className="export-actions">
-                  {[
-                    ["csv", "CSV"],
-                    ["xlsx", "Excel"],
-                    ["docx", "Word"],
-                    ["pdf", "PDF"],
-                    ["json", "JSON"],
-                    ["zip", "All Files"],
-                  ].map(([key, label]) => (
-                    results.export_files?.[key] && (
-                      <button
-                        key={key}
-                        className="export-button"
-                        onClick={() => downloadExport(results.export_files[key])}
-                      >
-                        {label}
-                      </button>
-                    )
-                  ))}
+                <h2>
+                  Best Optimized Stowage
+                  Plan
+                </h2>
+
+                <div className="plan-head">
+                  <div>
+                    <span>
+                      Selected Strategy
+                    </span>
+
+                    <strong>
+                      {algorithmName(
+                        recommendedAlgorithm
+                      )}
+                    </strong>
+                  </div>
+
+                  <div>
+                    <span>
+                      Dataset
+                    </span>
+
+                    <strong>
+                      {results.dataset ||
+                        dataset}
+                    </strong>
+                  </div>
                 </div>
-              </div>
-            </section>
 
-
-            {/* ------------------------------------------------ */}
-            {/* ALGORITHM COMPARISON */}
-            {/* ------------------------------------------------ */}
-
-            <section className="card">
-
-              <div className="section-title">
-
-                <span>03</span>
-
-                Best Optimized Stowage Plan
-
-              </div>
-
-
-              <div className="table-wrapper">
-
-                <table>
-
-                  <thead>
-
-                    <tr>
-
-                      <th>Algorithm</th>
-                      <th>Runtime</th>
-                      <th>Assignment</th>
-                      <th>Utilization</th>
-                      <th>Violations</th>
-                      <th>Imbalance</th>
-                      <th>Objective</th>
-
-                    </tr>
-
-                  </thead>
-
-
-                  <tbody>
-
-                    {results.comparison
-  .filter(
-    row =>
-      row.algorithm ===
-      results.recommended_algorithm
-  )
-  .map(
-    row => (
-
-                        <tr
-                          key={row.algorithm}
-                          onClick={() =>
-                            row.status === "SUCCESS" &&
-                            setActiveAlgorithm(
-                              row.algorithm
-                            )
-                          }
-                          className={
-                            activeAlgorithm ===
-                            row.algorithm
-                              ? "active-row"
-                              : ""
-                          }
-                        >
-
-                          <td>
-                            <strong>
-                              {formatAlgorithmName(
-                                row.algorithm
-                              )}
-                            </strong>
-                          </td>
-
-                          <td>
-                            {Number(
-                              row.runtime_seconds
-                            ).toFixed(3)}s
-                          </td>
-
-                          <td>
-                            {row.status === "SUCCESS"
-                              ? `${row.assignment_rate}%`
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {row.status === "SUCCESS"
-                              ? `${row.slot_utilization}%`
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {row.status === "SUCCESS"
-                              ? row.constraint_violations
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {row.status === "SUCCESS"
-                              ? Number(
-                                  row.weight_imbalance_std
-                                ).toFixed(2)
-                              : "—"}
-                          </td>
-
-                          <td>
-                            {row.status === "SUCCESS"
-                              ? Number(
-                                  row.objective_score
-                                ).toFixed(2)
-                              : "Failed"}
-                          </td>
-
-                        </tr>
-
-                      )
+                <div className="metrics">
+                  <Metric
+                    label="Assignment"
+                    value={formatPercent(
+                      recommendedMetrics.assignment_rate
                     )}
+                  />
 
-                  </tbody>
+                  <Metric
+                    label="Slot Utilization"
+                    value={formatPercent(
+                      recommendedMetrics.slot_utilization
+                    )}
+                  />
 
-                </table>
+                  <Metric
+                    label="Violations"
+                    value={
+                      recommendedMetrics.constraint_violations ??
+                      "N/A"
+                    }
+                  />
 
-              </div>
+                  <Metric
+                    label="Weight Imbalance"
+                    value={formatNumber(
+                      recommendedMetrics.weight_imbalance_std
+                    )}
+                  />
 
-            </section>
+                  <Metric
+                    label="Objective Score"
+                    value={formatNumber(
+                      recommendedMetrics.objective_score
+                    )}
+                  />
 
-
-            {/* ------------------------------------------------ */}
-            {/* CHARTS */}
-            {/* ------------------------------------------------ */}
-
-            {successfulResults.length > 0 && (
-
-              <section className="grid two">
-
-
-                <div className="card chart-card">
-
-                  <div className="section-title">
-
-                    <span>04</span>
-
-                    Runtime Comparison
-
-                  </div>
-
-
-                  <ResponsiveContainer
-                    width="100%"
-                    height={320}
-                  >
-
-                    <BarChart
-                      data={
-                        successfulResults
-                      }
-                    >
-
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                      />
-
-                      <XAxis
-                        dataKey="algorithm"
-                        angle={-20}
-                        textAnchor="end"
-                        height={80}
-                      />
-
-                      <YAxis />
-
-                      <Tooltip />
-
-                      <Bar
-                        dataKey="runtime_seconds"
-                        name="Runtime (seconds)"
-                      />
-
-                    </BarChart>
-
-                  </ResponsiveContainer>
-
+                  <Metric
+                    label="Runtime"
+                    value={`${formatNumber(
+                      recommendedMetrics.runtime_seconds,
+                      3
+                    )} s`}
+                  />
                 </div>
 
+                <div className="why">
+                  <h3>
+                    Why this plan was
+                    selected
+                  </h3>
 
-                <div className="card chart-card">
+                  <ol className="why-list">
+                    <li>
+                      Minimum constraint
+                      violations
+                    </li>
 
-                  <div className="section-title">
+                    <li>
+                      Minimum unassigned
+                      containers
+                    </li>
 
-                    <span>05</span>
+                    <li>
+                      Maximum container
+                      assignment rate
+                    </li>
 
-                    Objective Comparison
+                    <li>
+                      Lower overall objective
+                      penalty
+                    </li>
 
-                  </div>
+                    <li>
+                      Lower weight imbalance
+                    </li>
 
-
-                  <ResponsiveContainer
-                    width="100%"
-                    height={320}
-                  >
-
-                    <LineChart
-                      data={
-                        successfulResults
-                      }
-                    >
-
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                      />
-
-                      <XAxis
-                        dataKey="algorithm"
-                        angle={-20}
-                        textAnchor="end"
-                        height={80}
-                      />
-
-                      <YAxis />
-
-                      <Tooltip />
-
-                      <Line
-                        type="monotone"
-                        dataKey="objective_score"
-                        name="Objective Score"
-                      />
-
-                    </LineChart>
-
-                  </ResponsiveContainer>
-
+                    <li>
+                      Runtime used only as
+                      final tie-breaker
+                    </li>
+                  </ol>
                 </div>
-
               </section>
 
-            )}
+              {/* STEP 3 */}
 
-
-            {/* ------------------------------------------------ */}
-            {/* STOWAGE PLAN */}
-            {/* ------------------------------------------------ */}
-
-            <section className="card">
-
-              <div className="section-title">
-
-                <span>06</span>
-
-                Stowage Assignment
-
-              </div>
-
-
-              <div className="solution-selector">
-
-                {successfulResults.map(
-                  row => (
-
-                    <button
-                      key={
-                        row.algorithm
-                      }
-                      className={
-                        activeAlgorithm ===
-                        row.algorithm
-                          ? "selected"
-                          : ""
-                      }
-                      onClick={() =>
-                        setActiveAlgorithm(
-                          row.algorithm
-                        )
-                      }
-                    >
-
-                      {formatAlgorithmName(
-                        row.algorithm
-                      )}
-
-                    </button>
-
-                  )
-                )}
-
-              </div>
-
-
-              <div className="table-wrapper">
-
-                <table>
-
-                  <thead>
-
-                    <tr>
-
-                      <th>Container</th>
-                      <th>Slot</th>
-                      <th>Bay</th>
-                      <th>Row</th>
-                      <th>Tier</th>
-                      <th>Weight</th>
-                      <th>Destination</th>
-                      <th>Priority</th>
-
-                    </tr>
-
-                  </thead>
-
-
-                  <tbody>
-
-                    {activeSolution.map(
-                      (item, index) => (
-
-                        <tr
-                          key={
-                            `${item.container_id}-${index}`
-                          }
-                        >
-
-                          <td>
-                            {item.container_id}
-                          </td>
-
-                          <td>
-                            {item.slot_id}
-                          </td>
-
-                          <td>
-                            {item.bay}
-                          </td>
-
-                          <td>
-                            {item.row}
-                          </td>
-
-                          <td>
-                            {item.tier}
-                          </td>
-
-                          <td>
-                            {item.container_weight}
-                          </td>
-
-                          <td>
-                            {item.destination}
-                          </td>
-
-                          <td>
-                            {item.priority}
-                          </td>
-
-                        </tr>
-
-                      )
-                    )}
-
-                  </tbody>
-
-                </table>
-
-              </div>
-
-            </section>
-
-
-            {/* ------------------------------------------------ */}
-            {/* RESEARCH SUMMARY */}
-            {/* ------------------------------------------------ */}
-
-            {researchSummary && (
-
-              <section className="card research-card">
-
-                <div className="section-title">
-
-                  <span>07</span>
-
-                  Research Summary
-
+              <section className="card">
+                <div className="step">
+                  STEP 03
                 </div>
 
+                <h2>
+                  Container Scheduling
+                  &amp; Stowage Assignment
+                </h2>
 
-                <p className="research-summary-text">
-                  {researchSummary.text}
+                <div className="stats">
+                  <Stat
+                    label="Containers in Plan"
+                    value={
+                      plan.length
+                    }
+                  />
+
+                  <Stat
+                    label="Scheduled"
+                    value={
+                      scheduledCount
+                    }
+                  />
+
+                  <Stat
+                    label="Unscheduled"
+                    value={
+                      unscheduledCount
+                    }
+                  />
+
+                  <Stat
+                    label="Selected Strategy"
+                    value={algorithmName(
+                      recommendedAlgorithm
+                    )}
+                  />
+                </div>
+
+                <div className="toolbar">
+                  <input
+                    type="search"
+                    value={
+                      search
+                    }
+                    placeholder="Search container, destination, priority, slot..."
+                    onChange={(
+                      event
+                    ) =>
+                      setSearch(
+                        event.target
+                          .value
+                      )
+                    }
+                  />
+
+                  <span className="muted">
+                    {
+                      filteredPlan.length
+                    }{" "}
+                    container(s)
+                  </span>
+                </div>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          Container
+                        </th>
+
+                        <th>
+                          Status
+                        </th>
+
+                        <th>
+                          Operational
+                          Priority
+                        </th>
+
+                        <th>
+                          Destination
+                        </th>
+
+                        <th>
+                          Weight
+                        </th>
+
+                        <th>
+                          Bay
+                        </th>
+
+                        <th>
+                          Row
+                        </th>
+
+                        <th>
+                          Tier
+                        </th>
+
+                        <th>
+                          Details
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {filteredPlan.map(
+                        (
+                          container
+                        ) => {
+                          const assigned =
+                            isAssigned(
+                              container
+                            );
+
+                          return (
+                            <tr
+                              key={`${container.container_id}-${container.slot_id ?? "none"}`}
+                            >
+                              <td>
+                                <strong>
+                                  {
+                                    container.container_id
+                                  }
+                                </strong>
+                              </td>
+
+                              <td>
+                                <span
+                                  className={
+                                    assigned
+                                      ? "scheduled"
+                                      : "unscheduled"
+                                  }
+                                >
+                                  {assigned
+                                    ? "Scheduled"
+                                    : "Unscheduled"}
+                                </span>
+                              </td>
+
+                              <td>
+                                <div className="priority-cell">
+                                  <span
+                                    className="priority-badge"
+                                    style={getPriorityStyle(
+                                      container.priority_level
+                                    )}
+                                  >
+                                    {container.priority_level ||
+                                      "Normal"}
+                                  </span>
+
+                                  <span className="priority-score">
+                                    Score:{" "}
+                                    {container.priority_score ??
+                                      "N/A"}
+                                  </span>
+
+                                  <span className="priority-score">
+                                    Input
+                                    Priority:{" "}
+                                    {container.priority ??
+                                      "N/A"}
+                                  </span>
+                                </div>
+                              </td>
+
+                              <td>
+                                {
+                                  container.destination
+                                }
+                              </td>
+
+                              <td>
+                                {
+                                  container.container_weight
+                                }
+                              </td>
+
+                              <td>
+                                {assigned
+                                  ? container.bay
+                                  : "—"}
+                              </td>
+
+                              <td>
+                                {assigned
+                                  ? container.row
+                                  : "—"}
+                              </td>
+
+                              <td>
+                                {assigned
+                                  ? container.tier
+                                  : "—"}
+                              </td>
+
+                              <td>
+                                <button
+                                  type="button"
+                                  className="view"
+                                  onClick={() =>
+                                    setSelectedContainer(
+                                      container
+                                    )
+                                  }
+                                >
+                                  View Why
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        }
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              {/* STEP 4 */}
+
+              <section className="card">
+                <div className="step">
+                  STEP 04
+                </div>
+
+                <h2>
+                  Algorithm Comparison
+                </h2>
+
+                <p className="muted">
+                  All algorithms are tested
+                  using the same dataset and
+                  scoring framework.
                 </p>
 
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>
+                          Algorithm
+                        </th>
 
-                <div className="research-points">
+                        <th>
+                          Status
+                        </th>
 
-                  <div>
+                        <th>
+                          Assignment
+                        </th>
 
-                    <strong>
-                      {researchSummary.successful}
-                    </strong>
+                        <th>
+                          Utilization
+                        </th>
 
-                    <span>
-                      Algorithms completed
-                    </span>
+                        <th>
+                          Violations
+                        </th>
 
+                        <th>
+                          Unassigned
+                        </th>
+
+                        <th>
+                          Imbalance
+                        </th>
+
+                        <th>
+                          Objective
+                        </th>
+
+                        <th>
+                          Runtime
+                        </th>
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {(results.comparison ||
+                        []).map(
+                        (row) => (
+                          <tr
+                            key={
+                              row.algorithm
+                            }
+                            className={
+                              row.algorithm ===
+                              recommendedAlgorithm
+                                ? "selected-row"
+                                : ""
+                            }
+                          >
+                            <td>
+                              <strong>
+                                {algorithmName(
+                                  row.algorithm
+                                )}
+                              </strong>
+                            </td>
+
+                            <td>
+                              {
+                                row.status
+                              }
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? formatPercent(
+                                    row.assignment_rate
+                                  )
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? formatPercent(
+                                    row.slot_utilization
+                                  )
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? row.constraint_violations
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? row.unassigned
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? formatNumber(
+                                    row.weight_imbalance_std
+                                  )
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? formatNumber(
+                                    row.objective_score
+                                  )
+                                : "—"}
+                            </td>
+
+                            <td>
+                              {row.status ===
+                              "SUCCESS"
+                                ? `${formatNumber(
+                                    row.runtime_seconds,
+                                    3
+                                  )} s`
+                                : "Failed"}
+                            </td>
+                          </tr>
+                        )
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </>
+          )}
+
+        {/* CONTAINER MODAL */}
+
+        {selectedContainer && (
+          <div
+            className="modal-overlay"
+            onMouseDown={(
+              event
+            ) => {
+              if (
+                event.target ===
+                event.currentTarget
+              ) {
+                setSelectedContainer(
+                  null
+                );
+              }
+            }}
+          >
+            <div className="modal">
+              <div className="modal-header">
+                <div>
+                  <div className="step">
+                    CONTAINER DETAILS
                   </div>
 
-
-                  <div>
-
-                    <strong>
-                      {researchSummary.averageAssignment}%
-                    </strong>
-
-                    <span>
-                      Average assignment
-                    </span>
-
-                  </div>
-
-
-                  <div>
-
-                    <strong>
-                      {researchSummary.averageUtilization}%
-                    </strong>
-
-                    <span>
-                      Average slot utilization
-                    </span>
-
-                  </div>
-
-
-                  <div>
-
-                    <strong>
-                      {researchSummary.failed}
-                    </strong>
-
-                    <span>
-                      Algorithms failed
-                    </span>
-
-                  </div>
-
+                  <h2>
+                    {
+                      selectedContainer.container_id
+                    }
+                  </h2>
                 </div>
 
-              </section>
+                <button
+  onClick={() => setSelectedContainer(null)}
+  style={{
+    position: "absolute",
+    top: "18px",
+    right: "18px",
+    width: "42px",
+    height: "42px",
+    borderRadius: "50%",
+    border: "2px solid #cbd5e1",
+    background: "#ffffff",
+    color: "#0f172a",
+    fontSize: "24px",
+    fontWeight: "700",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+    boxShadow: "0 2px 8px rgba(0,0,0,0.08)"
+  }}
+  aria-label="Close"
+  title="Close"
+>
+  ×
+</button>
+              </div>
 
-            )}
+              <div className="details">
+                <DetailBox
+                  label="Status"
+                  value={
+                    isAssigned(
+                      selectedContainer
+                    )
+                      ? "Scheduled"
+                      : "Unscheduled"
+                  }
+                />
 
-          </>
+                <DetailBox
+                  label="Input Priority"
+                  value={
+                    selectedContainer.priority
+                  }
+                />
 
+                <DetailBox
+                  label="Destination"
+                  value={
+                    selectedContainer.destination
+                  }
+                />
+
+                <DetailBox
+                  label="Destination Order"
+                  value={
+                    selectedContainer.destination_order
+                  }
+                />
+
+                <DetailBox
+                  label="Size"
+                  value={
+                    selectedContainer.container_size
+                  }
+                />
+
+                <DetailBox
+                  label="Weight"
+                  value={
+                    selectedContainer.container_weight
+                  }
+                />
+
+                <DetailBox
+                  label="Hazardous"
+                  value={
+                    isTrue(
+                      selectedContainer.hazardous
+                    )
+                      ? "Yes"
+                      : "No"
+                  }
+                />
+
+                <DetailBox
+                  label="Refrigerated"
+                  value={
+                    isTrue(
+                      selectedContainer.refrigerated
+                    )
+                      ? "Yes"
+                      : "No"
+                  }
+                />
+
+                <DetailBox
+                  label="Slot"
+                  value={
+                    selectedContainer.slot_id ||
+                    "—"
+                  }
+                />
+
+                <DetailBox
+                  label="Bay"
+                  value={
+                    selectedContainer.bay ??
+                    "—"
+                  }
+                />
+
+                <DetailBox
+                  label="Row"
+                  value={
+                    selectedContainer.row ??
+                    "—"
+                  }
+                />
+
+                <DetailBox
+                  label="Tier"
+                  value={
+                    selectedContainer.tier ??
+                    "—"
+                  }
+                />
+              </div>
+
+              {/* PRIORITY */}
+
+              <div className="modal-section">
+                <h3>
+                  Operational Priority
+                </h3>
+
+                <div className="priority-summary">
+                  <span
+                    className="priority-badge"
+                    style={{
+                      ...getPriorityStyle(
+                        selectedContainer.priority_level
+                      ),
+
+                      padding:
+                        "9px 16px",
+                    }}
+                  >
+                    {selectedContainer.priority_level ||
+                      "Normal"}
+                  </span>
+
+                  <span className="info-pill">
+                    Priority Score:{" "}
+                    {selectedContainer.priority_score ??
+                      "N/A"}
+                  </span>
+
+                  <span className="info-pill">
+                    Input Priority:{" "}
+                    {selectedContainer.priority ??
+                      "N/A"}
+                  </span>
+                </div>
+
+                <h4>
+                  Why this priority was
+                  assigned
+                </h4>
+
+                <ul className="reason-list">
+                  {getPriorityReasons(
+                    selectedContainer
+                  ).map(
+                    (
+                      reason,
+                      index
+                    ) => (
+                      <li
+                        key={
+                          index
+                        }
+                      >
+                        {reason}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+
+              {/* POSITION */}
+
+              <div className="modal-section">
+                <h3>
+                  Why was this position
+                  selected?
+                </h3>
+
+                <ul className="reason-list">
+                  {getPlacementReasons(
+                    selectedContainer
+                  ).map(
+                    (
+                      reason,
+                      index
+                    ) => (
+                      <li
+                        key={
+                          index
+                        }
+                      >
+                        {reason}
+                      </li>
+                    )
+                  )}
+                </ul>
+              </div>
+
+              <div
+                style={{
+                  marginTop:
+                    "18px",
+
+                  padding:
+                    "14px",
+
+                  borderRadius:
+                    "12px",
+
+                  background:
+                    "#fff7ed",
+
+                  border:
+                    "1px solid #fed7aa",
+
+                  color:
+                    "#9a3412",
+
+                  fontSize:
+                    "13px",
+
+                  lineHeight:
+                    1.6,
+                }}
+              >
+                <strong>
+                  Important:{" "}
+                </strong>
+
+                Operational priority is
+                generated by the implemented
+                backend priority-enrichment
+                logic. Placement explanations
+                describe implemented
+                feasibility rules and do not
+                represent certified naval
+                stability calculations.
+              </div>
+            </div>
+          </div>
         )}
-
       </main>
-
-
-      {/* ================================================= */}
-      {/* FOOTER */}
-      {/* ================================================= */}
-
-      <footer>
-
-        AI-Assisted Multi-Objective Optimization
-        Framework for Container Stowage Planning
-
-      </footer>
-
     </div>
-
   );
-
 }
-
 
 export default App;

@@ -28,6 +28,9 @@ def empty_assignment(container):
             999
         ),
         "priority": container["priority"],
+        "priority_score": container.get("priority_score"),
+        "priority_level": container.get("priority_level"),
+        "priority_reason": container.get("priority_reason"),
         "hazardous": container["hazardous"],
         "refrigerated": container["refrigerated"],
     }
@@ -49,6 +52,9 @@ def make_assignment(container, slot):
             999
         ),
         "priority": container["priority"],
+        "priority_score": container.get("priority_score"),
+        "priority_level": container.get("priority_level"),
+        "priority_reason": container.get("priority_reason"),
         "hazardous": container["hazardous"],
         "refrigerated": container["refrigerated"],
     }
@@ -114,35 +120,364 @@ def greedy(
         assignments
     )
 
+def enrich_container_priorities(containers):
+    """
+    Add system-generated operational priority information
+    to every container before any optimization algorithm runs.
+    """
 
-def priority_greedy(
-    containers,
-    slots
-):
+    ranked = containers.copy()
+
+    # Make sure required columns exist
+    if "priority" not in ranked.columns:
+        ranked["priority"] = 3
+
+    if "destination_order" not in ranked.columns:
+        ranked["destination_order"] = 999
+
+    if "refrigerated" not in ranked.columns:
+        ranked["refrigerated"] = False
+
+    if "hazardous" not in ranked.columns:
+        ranked["hazardous"] = False
+
+    if "weight" not in ranked.columns:
+        ranked["weight"] = 0
+
+    # Clean numeric values
+    ranked["priority"] = (
+        pd.to_numeric(ranked["priority"], errors="coerce")
+        .fillna(3)
+    )
+
+    ranked["destination_order"] = (
+        pd.to_numeric(ranked["destination_order"], errors="coerce")
+        .fillna(999)
+    )
+
+    ranked["weight"] = (
+        pd.to_numeric(ranked["weight"], errors="coerce")
+        .fillna(0)
+    )
+
+    # Convert yes/no/true/false values safely
+    def as_bool(value):
+        if isinstance(value, bool):
+            return value
+
+        return str(value).strip().lower() in {
+            "true",
+            "1",
+            "yes",
+            "y",
+        }
+
+    ranked["refrigerated"] = ranked["refrigerated"].apply(as_bool)
+    ranked["hazardous"] = ranked["hazardous"].apply(as_bool)
+
+    # Calculate system priority
+    def calculate_priority(row):
+        score = 0
+        reasons = []
+
+        # ---------------------------------
+        # Input / business priority
+        # Priority 1 = highest
+        # ---------------------------------
+        input_priority = int(row["priority"])
+
+        if input_priority <= 1:
+            score += 30
+            reasons.append(
+                "High business priority from input data"
+            )
+
+        elif input_priority == 2:
+            score += 20
+            reasons.append(
+                "Medium business priority from input data"
+            )
+
+        else:
+            score += 10
+            reasons.append(
+                "Normal business priority from input data"
+            )
+
+        # ---------------------------------
+        # Destination / discharge order
+        # Earlier discharge = more important
+        # ---------------------------------
+        destination_order = int(
+            row["destination_order"]
+        )
+
+        if destination_order == 1:
+            score += 40
+            reasons.append(
+                "First discharge port requires early accessibility"
+            )
+
+        elif destination_order == 2:
+            score += 30
+            reasons.append(
+                "Early discharge destination"
+            )
+
+        elif destination_order == 3:
+            score += 20
+            reasons.append(
+                "Intermediate discharge destination"
+            )
+
+        else:
+            score += 10
+            reasons.append(
+                "Later discharge destination"
+            )
+
+        # ---------------------------------
+        # Special cargo requirements
+        # ---------------------------------
+        if row["refrigerated"]:
+            score += 20
+            reasons.append(
+                "Refrigerated cargo requires reefer-compatible slot"
+            )
+
+        if row["hazardous"]:
+            score += 15
+            reasons.append(
+                "Hazardous cargo requires safety-compatible placement"
+            )
+
+        # ---------------------------------
+        # Convert numeric score to label
+        # ---------------------------------
+        if score >= 75:
+            level = "Critical"
+
+        elif score >= 55:
+            level = "High"
+
+        elif score >= 35:
+            level = "Medium"
+
+        else:
+            level = "Normal"
+
+        return pd.Series(
+            {
+                "priority_score": score,
+                "priority_level": level,
+                "priority_reason": "; ".join(reasons),
+            }
+        )
+
+    priority_details = ranked.apply(
+        calculate_priority,
+        axis=1,
+    )
+
+    ranked = pd.concat(
+        [ranked, priority_details],
+        axis=1,
+    )
+
+    return ranked
+
+def enrich_container_priorities(containers):
+    """
+    Add system-generated operational priority information
+    to every container.
+    """
+
+    ranked = containers.copy()
+
+    # Required columns
+    if "priority" not in ranked.columns:
+        ranked["priority"] = 3
+
+    if "destination_order" not in ranked.columns:
+        ranked["destination_order"] = 999
+
+    if "refrigerated" not in ranked.columns:
+        ranked["refrigerated"] = False
+
+    if "hazardous" not in ranked.columns:
+        ranked["hazardous"] = False
+
+    if "weight" not in ranked.columns:
+        ranked["weight"] = 0
+
+    # Clean numeric values
+    ranked["priority"] = (
+        pd.to_numeric(
+            ranked["priority"],
+            errors="coerce",
+        ).fillna(3)
+    )
+
+    ranked["destination_order"] = (
+        pd.to_numeric(
+            ranked["destination_order"],
+            errors="coerce",
+        ).fillna(999)
+    )
+
+    ranked["weight"] = (
+        pd.to_numeric(
+            ranked["weight"],
+            errors="coerce",
+        ).fillna(0)
+    )
+
+    # Convert boolean-like values
+    def as_bool(value):
+        if isinstance(value, bool):
+            return value
+
+        return str(value).strip().lower() in {
+            "true",
+            "1",
+            "yes",
+            "y",
+        }
+
+    ranked["refrigerated"] = (
+        ranked["refrigerated"].apply(as_bool)
+    )
+
+    ranked["hazardous"] = (
+        ranked["hazardous"].apply(as_bool)
+    )
+
+    # Calculate operational priority
+    def calculate_priority(row):
+        score = 0
+        reasons = []
+
+        input_priority = int(row["priority"])
+
+        if input_priority <= 1:
+            score += 30
+            reasons.append(
+                "High business priority from input data"
+            )
+
+        elif input_priority == 2:
+            score += 20
+            reasons.append(
+                "Medium business priority from input data"
+            )
+
+        else:
+            score += 10
+            reasons.append(
+                "Normal business priority from input data"
+            )
+
+        destination_order = int(
+            row["destination_order"]
+        )
+
+        if destination_order == 1:
+            score += 40
+            reasons.append(
+                "First discharge port requires early accessibility"
+            )
+
+        elif destination_order == 2:
+            score += 30
+            reasons.append(
+                "Early discharge destination"
+            )
+
+        elif destination_order == 3:
+            score += 20
+            reasons.append(
+                "Intermediate discharge destination"
+            )
+
+        else:
+            score += 10
+            reasons.append(
+                "Later discharge destination"
+            )
+
+        if row["refrigerated"]:
+            score += 20
+            reasons.append(
+                "Refrigerated cargo requires reefer-compatible slot"
+            )
+
+        if row["hazardous"]:
+            score += 15
+            reasons.append(
+                "Hazardous cargo requires safety-compatible placement"
+            )
+
+        if score >= 75:
+            level = "Critical"
+
+        elif score >= 55:
+            level = "High"
+
+        elif score >= 35:
+            level = "Medium"
+
+        else:
+            level = "Normal"
+
+        return pd.Series(
+            {
+                "priority_score": score,
+                "priority_level": level,
+                "priority_reason": "; ".join(reasons),
+            }
+        )
+
+    priority_details = ranked.apply(
+        calculate_priority,
+        axis=1,
+    )
+
+    ranked = pd.concat(
+        [
+            ranked,
+            priority_details,
+        ],
+        axis=1,
+    )
+
+    return ranked
+
+
+def priority_greedy(containers, slots):
+    ranked = enrich_container_priorities(
+        containers
+    )
 
     ordering = (
-        containers
-        .sort_values(
+        ranked.sort_values(
             [
-                "priority",
+                "priority_score",
                 "destination_order",
-                "weight"
+                "weight",
             ],
             ascending=[
+                False,
                 True,
-                True,
-                False
-            ]
-        )
-        .index
+                False,
+            ],
+        ).index
     )
 
     return greedy(
-        containers,
+        ranked,
         slots,
-        ordering
+        ordering,
     )
-
 
 def best_fit(
     containers,
