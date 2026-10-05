@@ -535,6 +535,11 @@ function App() {
   ] = useState("small");
 
   const [
+  currentStep,
+  setCurrentStep,
+] = useState(1);
+
+  const [
     backendOnline,
     setBackendOnline,
   ] = useState(false);
@@ -580,6 +585,21 @@ const [
 ] = useState("");
 
 const [
+  customFiles,
+  setCustomFiles,
+] = useState([]);
+
+const [
+  uploadingDataset,
+  setUploadingDataset,
+] = useState(false);
+
+const [
+  uploadSummary,
+  setUploadSummary,
+] = useState(null);
+
+const [
   runInfo,
   setRunInfo,
 ] = useState(null);
@@ -588,6 +608,19 @@ const [
   selectedBay,
   setSelectedBay,
 ] = useState("");
+
+function goToStep(step) {
+  setCurrentStep(step);
+
+  setTimeout(() => {
+    document
+      .getElementById("wizardTop")
+      ?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+  }, 50);
+}
   /* =====================================================
      LOAD DATASETS
   ===================================================== */
@@ -1024,6 +1057,133 @@ const selectedBayLayout =
      RUN OPTIMIZATION
   ===================================================== */
 
+  /* =====================================================
+   CUSTOM CSV DATASET
+===================================================== */
+
+function handleCustomFiles(event) {
+  const files = Array.from(
+    event.target.files || []
+  );
+
+  const invalidFile =
+    files.find(
+      (file) =>
+        !file.name
+          .toLowerCase()
+          .endsWith(".csv")
+    );
+
+  if (invalidFile) {
+    setError(
+      "Only CSV files are allowed."
+    );
+    return;
+  }
+
+  setCustomFiles(files);
+  setUploadSummary(null);
+  setError("");
+  setResults(null);
+  setVoyageResult(null);
+
+  if (dataset === "custom") {
+    setDataset("small");
+  }
+}
+
+
+async function uploadCustomDataset() {
+  if (customFiles.length < 2) {
+    setError(
+      "Please select both container/cargo CSV and vessel-slot CSV files."
+    );
+    return;
+  }
+
+  setUploadingDataset(true);
+  setError("");
+  setUploadSummary(null);
+  setResults(null);
+  setVoyageResult(null);
+
+  const formData =
+    new FormData();
+
+  customFiles.forEach(
+    (file) => {
+      formData.append(
+        "files",
+        file
+      );
+    }
+  );
+
+  try {
+    const response =
+      await fetch(
+        `${API}/api/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        errorMessage(
+          data.detail
+        )
+      );
+    }
+
+    setUploadSummary(data);
+
+    // Automatically use uploaded dataset
+    setDataset("custom");
+
+    // Refresh dataset information
+    try {
+      const datasetResponse =
+        await fetch(
+          `${API}/api/datasets`
+        );
+
+      if (datasetResponse.ok) {
+        const datasetData =
+          await datasetResponse.json();
+
+        if (
+          Array.isArray(
+            datasetData
+          )
+        ) {
+          setDatasets(
+            datasetData
+          );
+        }
+      }
+    } catch {
+      // Upload already succeeded,
+      // so dataset refresh failure
+      // should not cancel it.
+    }
+
+  } catch (err) {
+    setError(
+      err.message ||
+      "Could not upload the CSV dataset."
+    );
+  } finally {
+    setUploadingDataset(
+      false
+    );
+  }
+}
+
   async function runOptimization() {
     if (!backendOnline) {
       setError(
@@ -1031,6 +1191,16 @@ const selectedBayLayout =
       );
       return;
     }
+
+if (
+  dataset === "custom" &&
+  !uploadSummary
+) {
+  setError(
+    "Please upload and validate your CSV dataset first."
+  );
+  return;
+}
 
     setLoading(true);
     setError("");
@@ -1123,8 +1293,10 @@ try {
     );
 
   const route =
-    selectedDataset?.route ||
-    "JNPT (Mumbai) → Colombo → Port Klang → Singapore";
+  dataset === "custom"
+    ? "JNPT (Mumbai) → Colombo → Port Klang → Singapore"
+    : selectedDataset?.route ||
+      "JNPT (Mumbai) → Colombo → Port Klang → Singapore";
 
   const voyageResponse =
     await fetch(
@@ -2205,6 +2377,406 @@ try {
   }
 }
 
+/* =====================================================
+   CUSTOM CSV UPLOAD
+===================================================== */
+
+.csv-upload-card {
+  margin-top: 22px;
+  padding: 24px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ee;
+  border-radius: 18px;
+}
+
+.csv-upload-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 18px;
+}
+
+.csv-upload-heading h3 {
+  margin: 0 0 6px;
+  font-size: 20px;
+}
+
+.csv-upload-heading p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.csv-badge {
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.csv-format-box {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.csv-format-column {
+  padding: 18px;
+  background: white;
+  border: 1px solid #dbe3ee;
+  border-radius: 14px;
+  min-width: 0;
+}
+
+.csv-format-column > strong {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.csv-format-column > span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.csv-format-column code {
+  display: block;
+  padding: 12px;
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 9px;
+  font-size: 11px;
+  line-height: 1.6;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.csv-example {
+  margin-top: 13px;
+}
+
+.csv-example b {
+  font-size: 11px;
+  color: #475569;
+}
+
+.csv-example pre {
+  margin: 7px 0 0;
+  padding: 11px;
+  background: #f1f5f9;
+  border-radius: 9px;
+  overflow-x: auto;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #334155;
+}
+
+.csv-important-note {
+  margin-top: 14px;
+  padding: 12px 15px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 11px;
+  color: #9a3412;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.csv-upload-actions {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns:
+    auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.csv-file-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-height: 44px;
+  padding: 0 18px;
+
+  background: white;
+  color: #1d4ed8;
+
+  border: 1px solid #93c5fd;
+  border-radius: 11px;
+
+  font-size: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  margin: 0;
+}
+
+.csv-file-button:hover {
+  background: #eff6ff;
+}
+
+.csv-file-button input {
+  display: none;
+}
+
+.selected-csv-files {
+  color: #64748b;
+  font-size: 12px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.csv-upload-button {
+  min-height: 44px;
+  padding: 0 18px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background: #2563eb;
+  color: white;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.csv-upload-button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+.csv-upload-success {
+  margin-top: 16px;
+  padding: 14px 16px;
+
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 12px;
+
+  color: #166534;
+}
+
+.csv-success-icon {
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #dcfce7;
+  border-radius: 50%;
+
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.csv-upload-success strong,
+.csv-upload-success span {
+  display: block;
+}
+
+.csv-upload-success span {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+
+@media (max-width: 800px) {
+
+  .csv-format-box {
+    grid-template-columns: 1fr;
+  }
+
+  .csv-upload-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .selected-csv-files {
+    white-space: normal;
+  }
+}
+
+/* =====================================================
+   MULTI-STEP WIZARD
+===================================================== */
+
+.wizard-navigation {
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+
+  max-width: 1360px;
+  margin: 22px auto;
+  padding: 12px;
+
+  display: grid;
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
+  gap: 8px;
+
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid #dbe3ee;
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 30px
+    rgba(15, 23, 42, 0.08);
+}
+
+.wizard-step {
+  min-height: 62px;
+  padding: 9px 12px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 11px;
+
+  color: #64748b;
+  cursor: pointer;
+}
+
+.wizard-step span {
+  width: 30px;
+  height: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  flex-shrink: 0;
+
+  border-radius: 50%;
+  background: #e2e8f0;
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.wizard-step strong {
+  font-size: 12px;
+}
+
+.wizard-step.active {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.wizard-step.active span {
+  background: #2563eb;
+  color: white;
+}
+
+.wizard-step.completed {
+  color: #166534;
+}
+
+.wizard-step.completed span {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.wizard-step:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+/* NEXT / BACK */
+
+.wizard-actions {
+  margin-top: 28px;
+  padding-top: 20px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+.wizard-actions-end {
+  justify-content: flex-end;
+}
+
+.wizard-back,
+.wizard-next,
+.wizard-finish {
+  min-height: 46px;
+  padding: 0 20px;
+
+  border-radius: 11px;
+
+  font-size: 13px;
+  font-weight: 900;
+
+  cursor: pointer;
+}
+
+.wizard-back {
+  background: white;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+}
+
+.wizard-next {
+  background: #2563eb;
+  color: white;
+  border: 1px solid #2563eb;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wizard-next:hover {
+  background: #1d4ed8;
+}
+
+.wizard-finish {
+  background: #16a34a;
+  color: white;
+  border: 1px solid #16a34a;
+}
+
+
+@media (max-width: 750px) {
+  .wizard-navigation {
+    grid-template-columns:
+      repeat(5, minmax(70px, 1fr));
+
+    overflow-x: auto;
+  }
+
+  .wizard-step {
+    flex-direction: column;
+  }
+
+  .wizard-step strong {
+    font-size: 10px;
+  }
+}
+
 /* ================================
    VISIBILITY FIXES
 ================================ */
@@ -2289,9 +2861,66 @@ label {
           </div>
         </section>
 
+<div
+  id="wizardTop"
+  className="wizard-navigation"
+>
+  {[
+    [1, "Setup"],
+    [2, "Best Plan"],
+    [3, "Stowage"],
+    [4, "Comparison"],
+    [5, "Voyage"],
+  ].map(([number, label]) => {
+    const locked =
+      number > 1 && !results;
+
+    return (
+      <button
+        key={number}
+        type="button"
+        disabled={locked}
+        className={`wizard-step ${
+          currentStep === number
+            ? "active"
+            : ""
+        } ${
+          results &&
+          currentStep > number
+            ? "completed"
+            : ""
+        }`}
+        onClick={() =>
+          !locked &&
+          goToStep(number)
+        }
+      >
+        <span>
+          {results &&
+          currentStep > number
+            ? "✓"
+            : number}
+        </span>
+
+        <strong>
+          {label}
+        </strong>
+      </button>
+    );
+  })}
+</div>
+
         {/* STEP 1 */}
 
-        <section className="card container-section">
+        <section
+  className="card container-section"
+  style={{
+    display:
+      currentStep === 1
+        ? "block"
+        : "none",
+  }}
+>
           <div className="step">
             STEP 01
           </div>
@@ -2327,11 +2956,11 @@ label {
                 }}
               >
                 {datasets
-                  .filter(
-                    (item) =>
-                      item.id !==
-                      "custom"
-                  )
+  .filter(
+    (item) =>
+      item.id !== "custom" &&
+      !String(item.id).startsWith("rcspp_")
+  )
                   .map((item) => (
                     <option
                       key={
@@ -2367,6 +2996,176 @@ label {
               </div>
             </div>
           </div>
+
+          {/* =====================================================
+    CUSTOM CSV UPLOAD
+===================================================== */}
+
+<div className="csv-upload-card">
+  <div className="csv-upload-heading">
+    <div>
+      <h3>
+        Upload Your Dataset
+      </h3>
+
+      <p>
+        Upload your own container and
+        vessel-slot CSV files and run the
+        same optimization process.
+      </p>
+    </div>
+
+    <span className="csv-badge">
+      CSV
+    </span>
+  </div>
+
+
+  {/* FORMAT INFORMATION */}
+
+  <div className="csv-format-box">
+    <div className="csv-format-column">
+      <strong>
+        1. Container / Cargo CSV
+      </strong>
+
+      <span>
+        Recommended columns:
+      </span>
+
+      <code>
+        container_id, size, weight,
+        destination, destination_order,
+        priority, hazardous, refrigerated
+      </code>
+
+      <div className="csv-example">
+        <b>Example:</b>
+
+        <pre>
+{`container_id,size,weight,destination,destination_order,priority,hazardous,refrigerated
+C001,20,15000,Colombo,1,3,false,false
+C002,40,22000,Port Klang,2,2,false,true
+C003,20,18000,Singapore,3,1,true,false`}
+        </pre>
+      </div>
+    </div>
+
+
+    <div className="csv-format-column">
+      <strong>
+        2. Vessel Slot CSV
+      </strong>
+
+      <span>
+        Recommended columns:
+      </span>
+
+      <code>
+        slot_id, bay, row, tier,
+        size, max_weight,
+        reefer_capable,
+        hazardous_allowed
+      </code>
+
+      <div className="csv-example">
+        <b>Example:</b>
+
+        <pre>
+{`slot_id,bay,row,tier,size,max_weight,reefer_capable,hazardous_allowed
+B01-R01-T01,1,1,1,20,30000,true,true
+B01-R02-T01,1,2,1,40,35000,true,false
+B01-R03-T01,1,3,1,20,30000,false,true`}
+        </pre>
+      </div>
+    </div>
+  </div>
+
+
+  <div className="csv-important-note">
+    <strong>
+      For complete Voyage Planning:
+    </strong>{" "}
+    Use destinations such as
+    <b> Colombo</b>,
+    <b> Port Klang</b> and
+    <b> Singapore</b>, with destination
+    order 1, 2 and 3 respectively.
+  </div>
+
+
+  {/* FILE SELECTOR */}
+
+  <div className="csv-upload-actions">
+    <label className="csv-file-button">
+      Select CSV Files
+
+      <input
+        type="file"
+        accept=".csv,text/csv"
+        multiple
+        onChange={
+          handleCustomFiles
+        }
+      />
+    </label>
+
+    <div className="selected-csv-files">
+      {customFiles.length > 0
+        ? `${customFiles.length} file(s) selected: ${customFiles
+            .map(
+              (file) =>
+                file.name
+            )
+            .join(", ")}`
+        : "No CSV files selected"}
+    </div>
+
+    <button
+      type="button"
+      className="csv-upload-button"
+      disabled={
+        uploadingDataset ||
+        customFiles.length < 2
+      }
+      onClick={
+        uploadCustomDataset
+      }
+    >
+      {uploadingDataset
+        ? "Uploading & Validating..."
+        : "Upload & Validate Dataset"}
+    </button>
+  </div>
+
+
+  {/* SUCCESS */}
+
+  {uploadSummary && (
+    <div className="csv-upload-success">
+      <div className="csv-success-icon">
+        ✓
+      </div>
+
+      <div>
+        <strong>
+          Dataset Ready
+        </strong>
+
+        <span>
+          {uploadSummary.container_count ??
+            uploadSummary.containers ??
+            0}{" "}
+          containers •{" "}
+          {uploadSummary.slot_count ??
+            uploadSummary.slots ??
+            0}{" "}
+          slots
+        </span>
+      </div>
+    </div>
+  )}
+</div>
 
           <div className="strategies">
             <h3>
@@ -2422,6 +3221,23 @@ label {
               <div>{error}</div>
             </div>
           )}
+
+{results &&
+  recommendedMetrics && (
+    <div className="wizard-actions wizard-actions-end">
+      <button
+        type="button"
+        className="wizard-next"
+        onClick={() =>
+          goToStep(2)
+        }
+      >
+        View Best Plan
+        <span>→</span>
+      </button>
+    </div>
+  )}
+
         </section>
 
         {/* RESULTS */}
@@ -2431,7 +3247,15 @@ label {
             <>
               {/* STEP 2 */}
 
-              <section className="card">
+              <section
+  className="card"
+  style={{
+    display:
+      currentStep === 2
+        ? "block"
+        : "none",
+  }}
+>
                 <div className="step">
                   STEP 02
                 </div>
@@ -2655,11 +3479,43 @@ label {
                     </li>
                   </ol>
                 </div>
+
+<div className="wizard-actions">
+  <button
+    type="button"
+    className="wizard-back"
+    onClick={() =>
+      goToStep(1)
+    }
+  >
+    ← Back
+  </button>
+
+  <button
+    type="button"
+    className="wizard-next"
+    onClick={() =>
+      goToStep(3)
+    }
+  >
+    Container Stowage
+    <span>→</span>
+  </button>
+</div>
+
               </section>
 
               {/* STEP 3 */}
 
-              <section className="card">
+              <section
+  className="card"
+  style={{
+    display:
+      currentStep === 3
+        ? "block"
+        : "none",
+  }}
+>
                 <div className="step">
                   STEP 03
                 </div>
@@ -2748,6 +3604,21 @@ label {
               </option>
             )
           )}
+
+{uploadSummary && (
+  <option value="custom">
+    Uploaded CSV Dataset —{" "}
+    {uploadSummary.container_count ??
+      uploadSummary.containers ??
+      0}{" "}
+    containers /{" "}
+    {uploadSummary.slot_count ??
+      uploadSummary.slots ??
+      0}{" "}
+    slots
+  </option>
+)}
+
         </select>
       </div>
     </div>
@@ -3072,11 +3943,43 @@ label {
                     </tbody>
                   </table>
                 </div>
+
+<div className="wizard-actions">
+  <button
+    type="button"
+    className="wizard-back"
+    onClick={() =>
+      goToStep(2)
+    }
+  >
+    ← Back
+  </button>
+
+  <button
+    type="button"
+    className="wizard-next"
+    onClick={() =>
+      goToStep(4)
+    }
+  >
+    Algorithm Comparison
+    <span>→</span>
+  </button>
+</div>
+
               </section>
 
               {/* STEP 4 */}
 
-              <section className="card">
+              <section
+  className="card"
+  style={{
+    display:
+      currentStep === 4
+        ? "block"
+        : "none",
+  }}
+>
                 <div className="step">
                   STEP 04
                 </div>
@@ -3227,6 +4130,30 @@ label {
                     </tbody>
                   </table>
                 </div>
+
+<div className="wizard-actions">
+  <button
+    type="button"
+    className="wizard-back"
+    onClick={() =>
+      goToStep(3)
+    }
+  >
+    ← Back
+  </button>
+
+  <button
+    type="button"
+    className="wizard-next"
+    onClick={() =>
+      goToStep(5)
+    }
+  >
+    Voyage Planning
+    <span>→</span>
+  </button>
+</div>
+
               </section>
             </>
           )}
@@ -3236,9 +4163,17 @@ label {
 ===================================================== */}
 
 {results && (
-  <section className="card voyage-section">
+  <section
+  className="card voyage-section"
+  style={{
+    display:
+      currentStep === 5
+        ? "block"
+        : "none",
+  }}
+>
     <div className="step">
-      STEP 04
+      STEP 05
     </div>
 
     <h2>
@@ -3750,7 +4685,31 @@ label {
         </div>
       </>
     )}
+
+<div className="wizard-actions">
+  <button
+    type="button"
+    className="wizard-back"
+    onClick={() =>
+      goToStep(4)
+    }
+  >
+    ← Back
+  </button>
+
+  <button
+    type="button"
+    className="wizard-finish"
+    onClick={() =>
+      goToStep(1)
+    }
+  >
+    ✓ Start New Run
+  </button>
+</div>
+
   </section>
+
 )}
 
         {/* CONTAINER MODAL */}
